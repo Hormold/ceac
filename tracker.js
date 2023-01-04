@@ -19,7 +19,7 @@ const send_notification = async (msg, application) => {
 			body: new URLSearchParams({
 				chat_id: application.notification_tg_id,
 				text: newStatus,
-				parser_mode: 'HTML',
+				parse_mode: 'HTML',
 			}),
 		});
 		const data = await res.json();
@@ -188,4 +188,4 @@ const query_status = async (application_id) => {
 };
 
 refresh_once();
-setInterval(refresh_once, 1000 * 60 * 30); // 30 minutes
+setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
