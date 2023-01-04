@@ -1,6 +1,6 @@
-import { DB } from "./db.js";
+import { DB } from "./utils/db.js";
 import fs from 'fs';
-import { resolve_captcha } from "./captcha.js";
+import { resolve_captcha } from "./utils/captcha.js";
 import {tpl} from './text.js';
 import axios from "axios";
 import tough from "tough-cookie";

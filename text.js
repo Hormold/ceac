@@ -20,9 +20,13 @@ Command list: /help
 	},
 
 	'stats': {
-		'ru': `Сейчас мы отслеживаем {totalCount} кейсов. Детальная статистика по статусам будет доступна в ближайшее время, когда в базе накопится достаточно данных. 
+		'ru': `Сейчас мы отслеживаем <b>{totalCount кейсов}</b>.
+Детальная статистика по статусам будет доступна в ближайшее время, когда в базе накопится достаточно данных. 
+
 Текущий баланс решателя капчи: {captchaBalance} RUB`,
-		'en': `We are currently tracking {totalCount} cases. Statistics by status will be available soon, when the database has enough data.
+		'en': `We are currently tracking <b>{totalCount} cases</b>.
+Statistics by status will be available soon, when the database has enough data.
+
 Current captcha solver balance: {captchaBalance} RUB`
 	},
 
@@ -30,12 +34,12 @@ Current captcha solver balance: {captchaBalance} RUB`
 		'ru': `Что-бы начать отслеживать статус вашего кейса, отправьте мне номер вашего кейса.
 Я буду проверять обновления о вашем кейсе раз-два в сутки.
 
-{status}
+<b>{status}</b>
 
 /status - Показать статус моего кейса (последнее обновление)
-/remove - Удалить мой кейс из списка отслеживаемых
-/donate - Пожертвовать на разработку бота
 /stats - Показать глобальную статистику по отслеживаемым кейсам
+/donate - Пожертвовать на разработку бота
+/remove - Удалить мой кейс из списка отслеживаемых
 
 Связь с разработчиком: @define
 `,
@@ -45,17 +49,17 @@ I will check for updates about your case once or twice a day.
 {status}
 
 /status - Show my case status (last update)
-/remove - Remove my case from tracking list
-/donate - Donate to the bot development
 /stats - Show global statistics about tracked cases
+/donate - Donate to the bot development
+/remove - Remove my case from tracking list
 
 Contact with developer: @define`,
 	},
 
 	statuses: {
 		'tracking': {
-			'ru': 'Отслеживается кейс: **{caseNumber}**',
-			'en': 'Tracking case: **{caseNumber}**'
+			'ru': 'Отслеживается кейс: {caseNumber}',
+			'en': 'Tracking case: {caseNumber}'
 		},
 		'nottracking': {
 			'ru': 'Еще не отслеживается кейс, отправьте мне номер вашего кейса.',
@@ -64,16 +68,20 @@ Contact with developer: @define`,
 	},
 
 	'donate': {
-		'en': `Revolut tag for donate: @hormold
-BTC: 13LNDiQ8kLfqmzr83RNKE8mTj7ixCoZ7GQ
-TRC20: TYJM9oCB3UUnbLLCKWtqDwEhCD5ftQeDve
-ERC20: 0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd`,
+		'en': `Bot works exclusively on donations made on a voluntary basis. If you want to support the development, you can make a donation here:
 
-		'ru': `Revolut тег для пожертвования: @hormold
-BTC: 13LNDiQ8kLfqmzr83RNKE8mTj7ixCoZ7GQ
-TRC20: TYJM9oCB3UUnbLLCKWtqDwEhCD5ftQeDve
-ERC20: 0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd
-Русские карты: https://boosty.to/ceactracking`
+Revolut tag for donate: @hormold
+BTC: \`\`\`13LNDiQ8kLfqmzr83RNKE8mTj7ixCoZ7GQ\`\`\`
+TRC20: \`\`\`TYJM9oCB3UUnbLLCKWtqDwEhCD5ftQeDve\`\`\`
+ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\``,
+
+		'ru': `Бот работает исключительно на пожертования сделаные на добровольной основе. Если вы хотите поддержать разработку бота, вы можете сделать это с помощью Revolut или карты российского банка.
+
+Revolut тег для пожертвования: @hormold
+BTC: \`\`\`13LNDiQ8kLfqmzr83RNKE8mTj7ixCoZ7GQ\`\`\`
+TRC20: \`\`\`TYJM9oCB3UUnbLLCKWtqDwEhCD5ftQeDve\`\`\`
+ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
+Карты РФ: https://boosty.to/ceactracking`
 
 	},
 
@@ -114,14 +122,16 @@ ERC20: 0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd
 		'ru': `Ваш кейс был удален из списка отслеживаемых. Вы можете добавить его снова, отправив мне номер вашего кейса.`
 	},
 	'caseStatus': {
-		'en': `Your case - {num}
-Last update: {updated}
+		'en': `Your case - <i>{num}</i>
+Last update: {updated} ({since})
 
-Status is: {status}`,
-		'ru': `Ваш кейс - {num}
-Последнее обновление: {updated}
+Status is: <b>{status}</b>
+Self check link: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
+		'ru': `Ваш кейс - <i>{num}</i>
+Последнее обновление: {updated} ({since})
 
-Статус: {status}`
+Статус: <b>{status}</b>
+Проверка доступна тут: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`
 	},
 
 	'update': {

@@ -1,8 +1,9 @@
 import { Telegraf } from 'telegraf';
 import dotenv from 'dotenv';
 import {tpl} from './text.js';
-import {DB} from './db.js';
-import {getStats} from './stats.js';
+import {DB} from './utils/db.js';
+import {getStats} from './utils/stats.js';
+import moment from 'moment';
 dotenv.config();
 
 // Valid case regexp:
@@ -26,14 +27,14 @@ bot.help(async (ctx) => {
 	} else {
 		currentStatus = tpl('statuses.nottracking', ctx.from.language_code);
 	}
-	ctx.replyWithMarkdown(tpl('help', ctx.from.language_code, {
+	ctx.replyWithHTML(tpl('help', ctx.from.language_code, {
 		status: currentStatus,
 	}))
 });
-bot.command('donate', (ctx) => ctx.reply(tpl('donate', ctx.from.language_code)));
+bot.command('donate', (ctx) => ctx.replyWithMarkdown(tpl('donate', ctx.from.language_code)));
 bot.command('stats', async (ctx) => {
 	const stats = await getStats();
-	ctx.reply(tpl('stats', ctx.from.language_code, stats));
+	ctx.replyWithHTML(tpl('stats', ctx.from.language_code, stats));
 });
 bot.command('remove', async (ctx) => {
 	const {id} = ctx.from;
@@ -58,10 +59,11 @@ bot.command('status', async (ctx) => {
 	// build log: status (date changed)
 	const latestStatus = statuses[0];
 
-	ctx.reply(tpl('caseStatus', ctx.from.language_code, {
+	ctx.replyWithHTML(tpl('caseStatus', ctx.from.language_code, {
 		num: application_id,
 		status: latestStatus.status,
 		updated: new Date(status.last_checked || Date.now()).toLocaleString(ctx.from.language_code),
+		since: moment(latestStatus.created_at).locale(ctx.from.language_code).fromNow(),
 	}));
 });
 
@@ -92,6 +94,7 @@ bot.on('text', async (ctx) => {
 });
 
 bot.launch();
+console.log('Bot started');
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
