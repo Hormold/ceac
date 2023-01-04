@@ -32,31 +32,38 @@ const send_notification = async (msg, application) => {
 };
 
 const refresh_once = async () => {
+	console.log(`[${new Date().toISOString()}] Refreshing...`);
 	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '18 hours'::interval OR last_checked IS NULL");
+	console.log(`[${new Date().toISOString()}] ${applications.length} applications to check`);
 	for (const application of applications) {
 		console.log(`Application ID: ${application.application_id}, checking...`);
-		const records = await DB.query("SELECT * FROM history WHERE application_id = $1 ORDER BY created_at DESC", [application.id]);
-		if (records && records.find((r) => r.status === "Issued")) {
-			console.log(`Application ${application.application_id} has already issued, skip.`);
-			continue;
-		}
-		const [result, status] = await query_status(application.application_id);
-		if(!result) {
-			console.log(`Application ID: ${application.application_id}, problem with query status, check again in 1h`);
-			await DB.query("UPDATE application SET last_checked = NOW() + INTERVAL '1 hours'::interval, last_error = $1 WHERE application_id = $2", [status, application.application_id]);
-			continue;
-		}
-		// Check not have same status in records
-		const hasSameStatus = records.find((r) => r.status === status);
-		if (!records.length || hasSameStatus) {
-			console.log("Application ID: " + application.application_id + ", status: " + status);
-			await send_notification(status, application);
-			await DB.query("INSERT INTO history (application_id, status) VALUES ($1, $2)", [application.application_id, status]);
-			await DB.query("UPDATE application SET last_checked = NOW() WHERE application_id = $1", [application.application_id]);
-		} else {
-			console.log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
+		try {
+			const records = await DB.query("SELECT * FROM history WHERE application_id = $1 ORDER BY created_at DESC", [application.id]);
+			if (records && records.find((r) => r.status === "Issued")) {
+				console.log(`Application ${application.application_id} has already issued, skip.`);
+				continue;
+			}
+			const [result, status] = await query_status(application.application_id);
+			if(!result) {
+				console.log(`Application ID: ${application.application_id}, problem with query status, check again in 1h`);
+				await DB.query("UPDATE application SET last_checked = NOW() + INTERVAL '1 hours'::interval, last_error = $1 WHERE application_id = $2", [status, application.application_id]);
+				continue;
+			}
+			// Check not have same status in records
+			const hasSameStatus = records.find((r) => r.status === status);
+			if (!records.length || hasSameStatus) {
+				console.log("Application ID: " + application.application_id + ", status: " + status);
+				await send_notification(status, application);
+				await DB.query("INSERT INTO history (application_id, status) VALUES ($1, $2)", [application.application_id, status]);
+				await DB.query("UPDATE application SET last_checked = NOW() WHERE application_id = $1", [application.application_id]);
+			} else {
+				console.log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
+			}
+		} catch (e) {
+			console.log(`Application ID: ${application.application_id}, error: ${e.message}`);
 		}
 	}
+	console.log(`[${new Date().toISOString()}] Refreshing done, ${applications.length} applications checked.`);
 };
 
 const headers = {
