@@ -180,3 +180,4 @@ const query_status = async (application_id) => {
 };
 
 refresh_once();
+setInterval(refresh_once, 1000 * 60 * 30); // 30 minutes
