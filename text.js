@@ -123,20 +123,22 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 	},
 	'caseStatus': {
 		'en': `Your case - <i>{num}</i>
-Last update: {updated} ({since})
+Last checked: {checked} ({checkedSince})
+Last change: {statusUpdated} ({statusSince})
 
 Status is: <b>{status}</b>
-Self check link: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
+Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		'ru': `Ваш кейс - <i>{num}</i>
-Последнее обновление: {updated} ({since})
+Последняя проверка: {checked} ({checkedSince})
+Последнее изменение: {statusUpdated} ({statusSince})
 
 Статус: <b>{status}</b>
-Проверка доступна тут: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`
+Ручная проверка: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`
 	},
 
 	'update': {
-		'en': `Your case ({num}) status has been updated: {status}`,
-		'ru': `Статус вашего кейса ({num}) был обновлен: {status}`
+		'en': `⚠️ Your case ({num}) status has been updated: <b>{status}</b>`,
+		'ru': `⚠️ Статус вашего кейса ({num}) был обновлен: <b>{status}</b>`
 	},
 
 

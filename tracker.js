@@ -19,6 +19,7 @@ const send_notification = async (msg, application) => {
 			body: new URLSearchParams({
 				chat_id: application.notification_tg_id,
 				text: newStatus,
+				parser_mode: 'HTML',
 			}),
 		});
 		const data = await res.json();
