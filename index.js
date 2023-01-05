@@ -76,7 +76,7 @@ bot.command('status', async (ctx) => {
 
 
 		checked: new Date(status.last_checked || Date.now()).toLocaleString(ctx.from.language_code),
-		checkedSince: moment(latestStatus.last_checked || Date.now()).locale(ctx.from.language_code).fromNow(),
+		checkedSince: moment(status.last_checked || Date.now()).locale(ctx.from.language_code).fromNow(),
 	}));
 });
 
