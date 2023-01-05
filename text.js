@@ -1,6 +1,11 @@
 const messages = {
 	// Short: Bot for tracking Diversity Visa Lottery (DV) status on CEAC
 	// Long description: This bot is targeted for Diversity Visa Lottery (DV) applicants. It will send you updates about your case status on CEAC.
+
+	'cutoff': {
+		'en': `Bot does not check your case because it is not in current cut off numbers (see Visa Bulletin).\nCurrent cut off numbers for your region ({region}): <b>{cutOffNumbers}</b>`,
+		'ru': `Бот не проверяет ваш кейс, потому что он не в текущих номерах отсечки (смотрите Visa Bulletin).\nТекущие номера отсечки для вашего региона ({region}): <b>{cutOffNumbers}</b>`,
+	},
 	'start': {
 		'en': `Welcome to the CEAC Tracking Bot!
 Send me your case number and I will send you updates about your case. This bot is not affiliated with the US Government or the US Embassys.
@@ -123,12 +128,14 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 	},
 	'caseStatus': {
 		'en': `Your case - <i>{num}</i>
+{cutOffString}
 Last checked: {checked} ({checkedSince})
 Last change: {statusUpdated} ({statusSince})
 
 Status is: <b>{status}</b>
 Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		'ru': `Ваш кейс - <i>{num}</i>
+{cutOffString}
 Последняя проверка: {checked} ({checkedSince})
 Последнее изменение: {statusUpdated} ({statusSince})
 

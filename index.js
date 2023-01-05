@@ -4,6 +4,7 @@ import {tpl} from './text.js';
 import {DB} from './utils/db.js';
 import {getStats} from './utils/stats.js';
 import moment from 'moment';
+import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
 dotenv.config();
 
 // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
@@ -68,11 +69,24 @@ bot.command('status', async (ctx) => {
 	// build log: status (date changed)
 	const latestStatus = statuses[0];
 
+	const applicationRegion = application_id.substring(4, 6);
+	const applicationNumber = parseInt(application_id.substring(6));
+	let cutOffString;
+	if(CUT_OFF_NUMBERS[applicationRegion] < applicationNumber) {
+		cutOffString = tpl('cutoff', ctx.from.language_code, {
+			region: applicationRegion,
+			cutOffNumbers: CUT_OFF_NUMBERS[applicationRegion],
+		})+'\n';
+	} else {
+		cutOffString = '\n';
+	}
+
 	ctx.replyWithHTML(tpl('caseStatus', ctx.from.language_code, {
 		num: application_id,
 		status: latestStatus.status,
 		statusUpdated: new Date(latestStatus.created_at).toLocaleString(ctx.from.language_code),
 		statusSince: moment(latestStatus.created_at).locale(ctx.from.language_code).fromNow(),
+		cutOffString,
 
 
 		checked: new Date(status.last_checked || Date.now()).toLocaleString(ctx.from.language_code),

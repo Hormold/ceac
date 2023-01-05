@@ -4,6 +4,7 @@ import { resolve_captcha } from "./utils/captcha.js";
 import {tpl} from './text.js';
 import axios from "axios";
 import tough from "tough-cookie";
+import { CUT_OFF_NUMBERS } from "./cut_off_numbers.js";
 const ROOT = 'https://ceac.state.gov';
 
 const send_notification = async (msg, application) => {
@@ -86,6 +87,18 @@ const update_from_current_page = (curPage, name) => {
 
 
 const query_status = async (application_id) => {
+	// Extract region from application_id: 2023EU0012345 => EU
+
+	const applicationRegion = application_id.substring(4, 6);
+	// Extract number YYYYREGIONNNNNNN => NNNNNN
+	const applicationNumber = +application_id.substring(6);
+	if(CUT_OFF_NUMBERS[applicationRegion] && applicationNumber < CUT_OFF_NUMBERS[applicationRegion]) {
+		console.log(`Application ID: ${application_id}, number is too big, skip. Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`);
+		return [true, 'At NVC'];
+	}
+
+	console.log(`[APP ${application_id}] Querying status..., region: ${applicationRegion}, number: ${applicationNumber}`);
+
 	try {
 		const instance = axios.create({
 			withCredentials: true,
