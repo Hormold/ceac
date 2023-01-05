@@ -91,8 +91,8 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 			'ru': `Неверный номер кейса. Пожалуйста, проверьте номер кейса и попробуйте еще раз.`
 		},
 		'caseAlreadyTracked': {
-			'en': `This case is already tracked. You can see the status of your case here: /status`,
-			'ru': `Этот кейс уже отслеживается. Вы можете посмотреть статус вашего кейса здесь: /status`
+			'en': `This case is already tracked. You can see the status of your case here: /status, if you didn't add it - contact the bot administrator.`,
+			'ru': `Этот кейс уже отслеживается. Вы можете посмотреть статус вашего кейса здесь: /status, если вы его не добавляли - свяжитесь с администратором бота.`
 		},
 		'caseNotTracked': {
 			'en': `This case is not yet tracked. Just wait for updates.`,

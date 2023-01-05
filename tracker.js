@@ -38,7 +38,7 @@ const refresh_once = async () => {
 	for (const application of applications) {
 		console.log(`Application ID: ${application.application_id}, checking...`);
 		try {
-			const records = await DB.query("SELECT * FROM history WHERE application_id = $1 ORDER BY created_at DESC", [application.id]);
+			const records = await DB.query("SELECT * FROM history WHERE application_id = $1 ORDER BY created_at DESC", [application.application_id]);
 			if (records && records.find((r) => r.status === "Issued")) {
 				console.log(`Application ${application.application_id} has already issued, skip.`);
 				continue;
