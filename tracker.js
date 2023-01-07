@@ -53,7 +53,7 @@ const refresh_once = async () => {
 			// Check not have same status in records
 			const hasSameStatus = records.find((r) => r.status === status);
 			console.log(`Application ID: ${application.application_id}, previous statuses: ${records.map((r) => r.status).join(", ")}, has same status: ${hasSameStatus} | NEW STATUS: "${status}"`);
-			if (!records.length || hasSameStatus) {
+			if (!records.length || !hasSameStatus) {
 				console.log("Application ID: " + application.application_id + ", status: " + status);
 				await send_notification(status, application);
 				await DB.query("UPDATE application SET last_checked = NOW() WHERE application_id = $1", [application.application_id]);
