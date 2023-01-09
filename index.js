@@ -33,8 +33,11 @@ bot.help(async (ctx) => {
 	} else {
 		currentStatus = tpl('statuses.nottracking', ctx.from.language_code);
 	}
+
+	const current_cut_off = tpl('current_cut_off', ctx.from.language_code, CUT_OFF_NUMBERS);
+
 	ctx.replyWithHTML(tpl('help', ctx.from.language_code, {
-		status: currentStatus,
+		status: currentStatus+"\n"+current_cut_off,
 		subscribed: tpl(subscribed ? 'bul.status_ok' : 'bul.status_not_ok', ctx.from.language_code),
 	}))
 });

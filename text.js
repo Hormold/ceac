@@ -178,6 +178,10 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		'ru': `⚠️ Визовый бюллетень был обновлен.\nСсылка на бюллетень: {url}`
 	},
 
+	'current_cut_off': {
+		'en': `Current cut-off numbers > EU - {EU} | AS - {AS} | AF - {AF} | OC - {OC} | SA - {SA} | NA - {NA}`,
+		'ru': `Текущие cut-off номера > EU - {EU} | AS - {AS} | AF - {AF} | OC - {OC} | SA - {SA} | NA - {NA}`
+	},
 }
 
 export const tpl = (key, lang = 'en', data = {}) => {
