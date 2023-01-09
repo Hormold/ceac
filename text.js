@@ -45,6 +45,7 @@ Current captcha solver balance: {captchaBalance} RUB`
 /stats - Показать глобальную статистику по отслеживаемым кейсам
 /donate - Пожертвовать на разработку бота
 /remove - Удалить мой кейс из списка отслеживаемых
+/subscribe - Подписаться на рассылку о новых обновлениях визового бюллетеня ({subscribed}})
 
 Связь с разработчиком: @define
 `,
@@ -57,18 +58,19 @@ I will check for updates about your case once or twice a day.
 /stats - Show global statistics about tracked cases
 /donate - Donate to the bot development
 /remove - Remove my case from tracking list
+/subscribe - Subscribe to mailing list about new visa bulletin updates ({subscribed}})
 
 Contact with developer: @define`,
 	},
 
 	statuses: {
 		'tracking': {
-			'ru': 'Отслеживается кейс: {caseNumber}',
-			'en': 'Tracking case: {caseNumber}'
+			'ru': '✅ Отслеживается кейс: {caseNumber}',
+			'en': '✅ Tracking case: {caseNumber}'
 		},
 		'nottracking': {
-			'ru': 'Еще не отслеживается кейс, отправьте мне номер вашего кейса.',
-			'en': 'Not tracking any cases yet, send me your case number.'
+			'ru': '❌ Еще не отслеживается кейс, отправьте мне номер вашего кейса.',
+			'en': '❌ Not tracking any cases yet, send me your case number.'
 		},
 	},
 
@@ -148,6 +150,29 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		'ru': `⚠️ Статус вашего кейса ({num}) был обновлен: <b>{status}</b>`
 	},
 
+	'bul': {
+		'unsbscribed': {
+			'en': `You have been unsubscribed from the updates of the visa bulletin.`,
+			'ru': `Вы были отписаны от обновлений визового бюллетеня.`
+		},
+		'subscribed': {
+			'en': `You have been subscribed to the updates of the visa bulletin.`,
+			'ru': `Вы были подписаны на обновления визового бюллетеня.`
+		},
+		'status_ok': {
+			'en': '✅ subscribed',
+			'ru': '✅ подписан'
+		},
+		'status_not_ok': {
+			'en': '❌ not subscribed',
+			'ru': '❌ не подписан'
+		},
+	},
+
+	'bul_update': {
+		'en': `⚠️ Visa bulletin has been updated.\nLink to the bulletin: {url}`,
+		'ru': `⚠️ Визовый бюллетень был обновлен.\nСсылка на бюллетень: {url}`
+	},
 
 }
 

@@ -5,25 +5,17 @@ import {tpl} from './text.js';
 import axios from "axios";
 import tough from "tough-cookie";
 import { CUT_OFF_NUMBERS } from "./cut_off_numbers.js";
+import { sendMessage } from "./utils/tg.js";
+const CURRENT_YEAR = 2023;
 const ROOT = 'https://ceac.state.gov';
-
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const send_notification = async (msg, application) => {
 	try {
-		// Send telegram notification
 		const newStatus = tpl('update', application.lang, {
 			num: application.application_id,
 			status: msg,
 		})
-		const url = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`;
-		const res = await fetch(url, {
-			method: "POST",
-			body: new URLSearchParams({
-				chat_id: application.notification_tg_id,
-				text: newStatus,
-				parse_mode: 'HTML',
-			}),
-		});
-		const data = await res.json();
+		const data = await sendMessage(application.notification_tg_id, newStatus);
 		if (!data.ok) {
 			throw new Error(data.description);
 		}
@@ -198,8 +190,69 @@ const query_status = async (application_id) => {
 		console.log(`Error on application ${application_id}`, e);
 		return [false, e.message];
 	}
-
+};
+const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const visaBulletenTracker = async () => {
+	const nextBulletin = new Date();
+	nextBulletin.setMonth(nextBulletin.getMonth() + 1);
+	const url = `https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/${CURRENT_YEAR}/visa-bulletin-for-${months[nextBulletin.getMonth()]}-${CURRENT_YEAR}.html`;
+	try {
+		const content = await axios.get(url, {
+			url,
+			throwHttpErrors: false,
+		});
+		const text = content.data;
+		if(text.match(/404 - Page Not Found/i)) {
+			console.log(`[VBT] Cannot find next bulletin.`);
+		} else {
+			console.log(`!!!!!!!!!!!!!!!!!!!! [VBT] Next bulletin found: ${url}`);
+			reportNextBulletin(months[nextBulletin.getMonth()], url);
+		}
+	} catch (e) {
+		if(e.message.match(/404/i)) {
+			console.log(`[VBT] Cannot find next bulletin.`);
+		} else {
+			console.log(`[VBT] Error: ${e.message}`);
+		}
+	}
 };
 
+const reportNextBulletin = async (month, url) => {
+	const [reported] = await DB.query(`SELECT * FROM bul_reports WHERE month = $1 AND year = $2`, [month, 2023]);
+	if(reported) return;
+
+	const getUsers = await DB.query(`SELECT * FROM bul_sub WHERE is_notified_monthly = FALSE`);
+
+	// Get user chunks by 20
+	const chunks = [];
+	for (let i = 0; i < getUsers.length; i += 20) {
+		chunks.push(getUsers.slice(i, i + 20));
+	}
+
+	for (const chunk of chunks) {
+		for(const user of chunk) {
+			try {
+				const text = tpl('bul_update', user.lang, {
+					url
+				});
+				await sendMessage(user.tg_id, text, {
+					parse_mode: 'HTML',
+					disable_web_page_preview: true,
+				});
+				console.log(`[reportNextBulletin] Sent to ${user.tg_id} (${user.lang})`)
+			} catch (e) {
+				console.log(`[reportNextBulletin] Error: ${e.message}`, e);
+			}
+			await sleep(500);
+		}
+		await sleep(5000);
+	}
+
+	await DB.query(`INSERT INTO bul_reports (month, year) VALUES ($1, $2)`, [month, CURRENT_YEAR]);
+	console.log(`[reportNextBulletin] Reported next bulletin finished: ${month} ${CURRENT_YEAR}`)
+};
+
+visaBulletenTracker();
 refresh_once();
 setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
+setInterval(visaBulletenTracker, 1000 * 60 * 60); // 1 hour

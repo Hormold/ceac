@@ -21,6 +21,11 @@ bot.help(async (ctx) => {
 	const {id} = ctx.from;
 	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
 	let currentStatus;
+	let subscribed = false;
+	const sub = await DB.queryOne('SELECT * FROM bul_sub WHERE tg_id = $1', [id]);
+	if (sub) {
+		subscribed = true;
+	}
 	if (status) {
 		currentStatus = tpl('statuses.tracking', ctx.from.language_code, {
 			caseNumber: status.application_id,
@@ -30,7 +35,19 @@ bot.help(async (ctx) => {
 	}
 	ctx.replyWithHTML(tpl('help', ctx.from.language_code, {
 		status: currentStatus,
+		subscribed: tpl(subscribed ? 'bul.status_ok' : 'bul.status_not_ok', ctx.from.language_code),
 	}))
+});
+
+bot.command('subscribe', async (ctx) => {
+	const {id} = ctx.from;
+	const status = await DB.queryOne('SELECT * FROM bul_sub WHERE tg_id = $1', [id]);
+	if (status) {
+		await DB.query('DELETE FROM bul_sub WHERE tg_id = $1', [id]);
+		return ctx.reply(tpl('bul.unsbscribed', ctx.from.language_code));
+	}
+	await DB.query('INSERT INTO bul_sub (tg_id, lang) VALUES ($1, $2)', [id, ctx.from.language_code]);
+	ctx.reply(tpl('bul.subscribed', ctx.from.language_code));
 });
 
 bot.command('donate', (ctx) => ctx.replyWithMarkdown(tpl('donate', ctx.from.language_code)));
