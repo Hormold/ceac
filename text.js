@@ -7,7 +7,7 @@ const messages = {
 		'ru': `Бот не проверяет ваш кейс, потому что он не в текущих номерах отсечки (смотрите Visa Bulletin).\nТекущие номера отсечки для вашего региона ({region}): <b>{cutOffNumbers}</b>`,
 	},
 	'start': {
-		'en': `Welcome to the CEAC Tracking Bot!
+		'en': `Welcome to the CEAC Tracking Bot 👋
 Send me your case number and I will send you updates about your case. This bot is not affiliated with the US Government or the US Embassys.
 Bot is targeted for Immigrant Visa applicants (IV) by Diversity Visa Lottery (DV).
 
@@ -15,7 +15,7 @@ Bot is free to use, but if you want to support the development, you can donate h
 Current tracking cases: {totalCount} | Current captcha solver balance: {captchaBalance} RUB
 Command list: /help
 `,
-		'ru': `Добро пожаловать в бота для отслеживания статуса CEAC!
+		'ru': `Добро пожаловать в бота для отслеживания статуса CEAC 👋
 Отправьте мне свой номер кейса (DV) и я буду отправлять вам обновления о вашем случае. Этот бот не связан с правительством США или посольствами США.
 Бот предназначен для иммиграционных виз (IV) по лотерее Diversity Visa (DV).
 
@@ -36,7 +36,7 @@ Current captcha solver balance: {captchaBalance} RUB`
 	},
 
 	'help': {
-		'ru': `Что-бы начать отслеживать статус вашего кейса, отправьте мне номер вашего кейса.
+		'ru': `👋 Что-бы начать отслеживать статус вашего кейса, отправьте мне номер вашего кейса.
 Я буду проверять обновления о вашем кейсе раз-два в сутки.
 
 <b>{status}</b>
@@ -45,11 +45,11 @@ Current captcha solver balance: {captchaBalance} RUB`
 /stats - Показать глобальную статистику по отслеживаемым кейсам
 /donate - Пожертвовать на разработку бота
 /remove - Удалить мой кейс из списка отслеживаемых
-/subscribe - Подписаться на рассылку о новых обновлениях визового бюллетеня ({subscribed}})
+/subscribe - Подписаться на рассылку о новых обновлениях визового бюллетеня ({subscribed})
 
-Связь с разработчиком: @define
+🤖 Связь с разработчиком: @define
 `,
-		'en': `To start tracking your case status, send me your case number.
+		'en': `👋 To start tracking your case status, send me your case number.
 I will check for updates about your case once or twice a day.
 
 {status}
@@ -58,9 +58,9 @@ I will check for updates about your case once or twice a day.
 /stats - Show global statistics about tracked cases
 /donate - Donate to the bot development
 /remove - Remove my case from tracking list
-/subscribe - Subscribe to mailing list about new visa bulletin updates ({subscribed}})
+/subscribe - Subscribe to mailing list about new visa bulletin updates ({subscribed})
 
-Contact with developer: @define`,
+🤖 Contact with developer: @define`,
 	},
 
 	statuses: {
@@ -128,6 +128,10 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 		'en': `Your case has been removed from the tracking list. You can add it again by sending me your case number.`,
 		'ru': `Ваш кейс был удален из списка отслеживаемых. Вы можете добавить его снова, отправив мне номер вашего кейса.`
 	},
+	'caseRemoveSure': {
+		'en': `Are you sure you want to remove your case from the tracking list?\n\n<i>NOTE: You can add it again by sending me your case number.</i>\nI'm sure: /removeSure`,
+		'ru': `Вы уверены, что хотите удалить свой кейс из списка отслеживаемых?\n\n<i>ПРИМЕЧАНИЕ: Вы можете добавить его снова, отправив мне номер вашего кейса.</i>\nЯ уверен: /removeSure`
+	},
 	'caseStatus': {
 		'en': `Your case - <i>{num}</i>
 {cutOffString}
@@ -141,7 +145,7 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 Последняя проверка: {checked} ({checkedSince})
 Последнее изменение: {statusUpdated} ({statusSince})
 
-Статус: <b>{status}</b>
+Статус: <b>{status}</b> 
 Ручная проверка: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`
 	},
 
@@ -152,12 +156,12 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 
 	'bul': {
 		'unsbscribed': {
-			'en': `You have been unsubscribed from the updates of the visa bulletin.`,
-			'ru': `Вы были отписаны от обновлений визового бюллетеня.`
+			'en': `✅ You have been unsubscribed from the updates of the visa bulletin.`,
+			'ru': `✅ Вы были отписаны от обновлений визового бюллетеня.`
 		},
 		'subscribed': {
-			'en': `You have been subscribed to the updates of the visa bulletin.`,
-			'ru': `Вы были подписаны на обновления визового бюллетеня.`
+			'en': `❌ You have been subscribed to the updates of the visa bulletin.`,
+			'ru': `❌ Вы были подписаны на обновления визового бюллетеня.`
 		},
 		'status_ok': {
 			'en': '✅ subscribed',

@@ -14,7 +14,7 @@ const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.start(async (ctx) => {
 	const stats = await getStats();
-	ctx.reply(tpl('start', ctx.from.language_code, stats));
+	ctx.replyWithHTML(tpl('start', ctx.from.language_code, stats));
 });
 
 bot.help(async (ctx) => {
@@ -47,7 +47,7 @@ bot.command('subscribe', async (ctx) => {
 		return ctx.reply(tpl('bul.unsbscribed', ctx.from.language_code));
 	}
 	await DB.query('INSERT INTO bul_sub (tg_id, lang) VALUES ($1, $2)', [id, ctx.from.language_code]);
-	ctx.reply(tpl('bul.subscribed', ctx.from.language_code));
+	ctx.replyWithHTML(tpl('bul.subscribed', ctx.from.language_code));
 });
 
 bot.command('donate', (ctx) => ctx.replyWithMarkdown(tpl('donate', ctx.from.language_code)));
@@ -57,17 +57,20 @@ bot.command('stats', async (ctx) => {
 });
 
 bot.command('remove', async (ctx) => {
+	return ctx.replyWithHTML(tpl('caseRemoveSure', ctx.from.language_code));
+});
+bot.command('removeSure', async (ctx) => {
 	const {id} = ctx.from;
 	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
 	if(!status) 
-		return ctx.reply(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
+		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 	
 	// Step 1: remove from history
 	await DB.query('DELETE FROM history WHERE application_id = $1', [status.application_id]);
 	// Step 2: remove from application
 	const result = await DB.queryOne('DELETE FROM application WHERE notification_tg_id = $1 RETURNING *', [id]);
 	if (result) {
-		ctx.reply(tpl('caseRemoved', ctx.from.language_code));
+		ctx.replyWithHTML(tpl('caseRemoved', ctx.from.language_code));
 	} 
 		
 });
@@ -115,24 +118,24 @@ bot.on('text', async (ctx) => {
 	const {id} = ctx.from;
 	const {text} = ctx.message;
 	if (!CASE_REGEXP.test(text))
-		return ctx.reply(tpl('errors.invalidCaseNumber', ctx.from.language_code));
+		return ctx.replyWithHTML(tpl('errors.invalidCaseNumber', ctx.from.language_code));
 	
 	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE application_id = $1', [text]);
 	if (isCaseExists) {
-		return ctx.reply(tpl('errors.caseAlreadyTracked', ctx.from.language_code));
+		return ctx.replyWithHTML(tpl('errors.caseAlreadyTracked', ctx.from.language_code));
 	}
 
 	// Case limit
 	const casesCount = await DB.queryOne('SELECT COUNT(*) FROM application WHERE notification_tg_id = $1', [id]);
 	if (casesCount.count >= 1) {
-		return ctx.reply(tpl('errors.caseLimitPerUser', ctx.from.language_code));
+		return ctx.replyWithHTML(tpl('errors.caseLimitPerUser', ctx.from.language_code));
 	}
 
 	const result = await DB.queryOne('INSERT INTO application (application_id, notification_tg_id, lang) VALUES ($1, $2, $3) RETURNING *', [text, id, ctx.from.language_code]);
 	if (result) {
-		ctx.reply(tpl('caseAdded', ctx.from.language_code));
+		ctx.replyWithHTML(tpl('caseAdded', ctx.from.language_code));
 	} else {
-		ctx.reply(tpl('errors.caseAlreadyAdded', ctx.from.language_code));
+		ctx.replyWithHTML(tpl('errors.caseAlreadyAdded', ctx.from.language_code));
 	}
 });
 
