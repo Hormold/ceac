@@ -84,9 +84,12 @@ const query_status = async (application_id) => {
 	const applicationRegion = application_id.substring(4, 6);
 	// Extract number YYYYREGIONNNNNNN => NNNNNN
 	const applicationNumber = +application_id.substring(6);
-	if(CUT_OFF_NUMBERS[applicationRegion] && applicationNumber < CUT_OFF_NUMBERS[applicationRegion]) {
+	if(CUT_OFF_NUMBERS[applicationRegion] && applicationNumber > CUT_OFF_NUMBERS[applicationRegion]) {
 		console.log(`Application ID: ${application_id}, number is too big, skip. Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`);
 		return [true, 'At NVC'];
+	} else {
+		console.log(`Application ID: ${application_id}, number is ok, continue. number: ${applicationNumber}, region: ${applicationRegion}`);
+		console.log(`Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`, CUT_OFF_NUMBERS);
 	}
 
 	console.log(`[APP ${application_id}] Querying status..., region: ${applicationRegion}, number: ${applicationNumber}`);
