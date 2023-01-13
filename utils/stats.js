@@ -1,15 +1,14 @@
-import { DB } from "./db.js";
-
+import { DB } from './db.js';
 
 const get2captchaBalance = async () => {
-	const url = `http://rucaptcha.com/res.php`;
+	const url = 'http://rucaptcha.com/res.php';
 	const params = {
 		key: process.env.RUCAPTCHA_KEY,
-		action: "getbalance",
+		action: 'getbalance',
 		json: 1,
 	};
 	const response = await fetch(url, {
-		method: "POST",
+		method: 'POST',
 		body: new URLSearchParams(params),
 	});
 	const data = await response.json();
@@ -17,7 +16,7 @@ const get2captchaBalance = async () => {
 };
 
 const getDBStats = async () => {
-	const stats = await DB.query("SELECT COUNT(*) FROM application");
+	const stats = await DB.query('SELECT COUNT(*) FROM application');
 	return {
 		totalCount: stats[0].count,
 	};

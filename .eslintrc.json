@@ -1,0 +1,43 @@
+{
+	"extends": "standard",
+	"root": true,
+	"parser": "@babel/eslint-parser",
+	"parserOptions": {
+		"requireConfigFile": false
+	},
+	"env": {
+		"node": true
+	},
+	"globals": {},
+	"plugins": ["prefer-arrow"],
+	"rules": {
+		"indent": ["error", "tab"],
+		"arrow-body-style": ["error", "as-needed"],
+		"arrow-parens": ["error", "as-needed"],
+		"camelcase": 0,
+		"comma-dangle": ["error", "always-multiline"],
+		"curly": ["error", "multi"],
+		"generator-star-spacing": 0,
+		"handle-callback-err": [0, "error"],
+		"multiline-comment-style": ["error", "separate-lines"],
+		"no-debugger": 2,
+		"no-multi-spaces": 0,
+		"no-return-assign": 0,
+		"no-tabs": 0,
+		"no-template-curly-in-string": 0,
+		"no-trailing-spaces": ["error", {
+			"skipBlankLines": true
+		}],
+		"no-unused-vars": "error",
+		"no-useless-escape": "warn",
+		"no-var": "error",
+		"prefer-arrow-callback": "error",
+		"prefer-arrow/prefer-arrow-functions": ["error", {
+			"disallowPrototype": true,
+			"singleReturnOnly": false,
+			"classPropertiesAllowed": false
+		}],
+		"prefer-const": 2,
+		"semi": ["error", "always"]
+	}
+}
