@@ -14,7 +14,7 @@ Work in progress on this project, so expect bugs.
 - Track multiple cases
 - Tracking Visa Bulletin updates
 
-# SQL Schema
+## SQL Schema
 The SQL schema is located in `sql/schema.sql`
 You can create the database with the following command:
 ```
