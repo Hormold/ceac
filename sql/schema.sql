@@ -2,7 +2,6 @@
 
 CREATE TABLE application (
     application_id text PRIMARY KEY,
-    case_created text,
     notification_tg_id text,
     notification_type text DEFAULT 'telegram'::text,
     created_at timestamp with time zone DEFAULT now(),
@@ -41,7 +40,5 @@ CREATE TABLE bul_sub (
     is_notified_monthly boolean DEFAULT false,
     lang text DEFAULT 'en'::text
 );
-
--- Indices -------------------------------------------------------
 
 CREATE UNIQUE INDEX bul_sub_pkey ON bul_sub(tg_id int4_ops);

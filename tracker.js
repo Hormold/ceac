@@ -215,7 +215,7 @@ const visaBulletenTracker = async () => {
 };
 
 const reportNextBulletin = async (month, url) => {
-	const [reported] = await DB.query('SELECT * FROM bul_reports WHERE month = $1 AND year = $2', [month, 2023]);
+	const [reported] = await DB.query('SELECT * FROM bul_reports WHERE month = $1 AND year = $2', [month, CURRENT_YEAR]);
 	if (reported) return;
 
 	const getUsers = await DB.query('SELECT * FROM bul_sub WHERE is_notified_monthly = FALSE');

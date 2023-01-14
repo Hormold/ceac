@@ -143,6 +143,8 @@ bot.on('text', async ctx => {
 
 bot.launch();
 console.log('Bot started');
+if (process.env.ADMIN_ID)
+	bot.telegram.sendMessage(+process.env.ADMIN_ID, 'Bot started');
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));
