@@ -24,9 +24,7 @@ const send_notification = async (msg, application) => {
 };
 
 const refresh_once = async () => {
-	console.log(`[${new Date().toISOString()}] Refreshing...`);
 	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '18 hours'::interval OR last_checked IS NULL");
-	console.log(`[${new Date().toISOString()}] ${applications.length} applications to check`);
 	for (const application of applications) {
 		console.log(`Application ID: ${application.application_id}, checking...`);
 		try {
@@ -57,7 +55,7 @@ const refresh_once = async () => {
 			console.log(`Application ID: ${application.application_id}, error: ${e.message}`);
 		}
 	}
-	console.log(`[${new Date().toISOString()}] Refreshing done, ${applications.length} applications checked.`);
+	if (applications.length > 0) console.log(`[${new Date().toISOString()}] Refreshing done, ${applications.length} applications checked.`);
 };
 
 const headers = {
@@ -79,10 +77,10 @@ const update_from_current_page = (curPage, name) => {
 
 const query_status = async application_id => {
 	// Extract region from application_id: 2023EU0012345 => EU
-
 	const applicationRegion = application_id.substring(4, 6);
 	// Extract number YYYYREGIONNNNNNN => NNNNNN
 	const applicationNumber = +application_id.substring(6);
+	
 	if (CUT_OFF_NUMBERS[applicationRegion] && applicationNumber > CUT_OFF_NUMBERS[applicationRegion]) {
 		console.log(`Application ID: ${application_id}, number is too big, skip. Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`);
 		return [true, 'At NVC'];
@@ -202,10 +200,9 @@ const visaBulletenTracker = async () => {
 		const text = content.data;
 		if (text.match(/404 - Page Not Found/i))
 			console.log('[VBT] Cannot find next bulletin.');
-		else {
-			console.log(`!!!!!!!!!!!!!!!!!!!! [VBT] Next bulletin found: ${url}`);
+		else
+			// console.log(`!!!!!!!!!!!!!!!!!!!! [VBT] Next bulletin found: ${url}`);
 			reportNextBulletin(months[nextBulletin.getMonth()], url);
-		}
 	} catch (e) {
 		if (e.message.match(/404/i))
 			console.log('[VBT] Cannot find next bulletin.');
