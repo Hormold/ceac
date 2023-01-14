@@ -1,8 +1,8 @@
 export const CUT_OFF_NUMBERS = {
-	EU: 15000,
-	AF: 35000,
-	AS: 15500,
+	EU: 26000,
+	AF: 45000,
+	AS: 18750,
 	OC: 1100,
-	NA: 5,
-	SA: 2500,
+	NA: 13,
+	SA: 2100,
 };

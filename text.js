@@ -119,6 +119,10 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 	},
 
 	errors: {
+		noAccess: {
+			en: 'You don\'t have access to this command. If you think this is a mistake, contact the bot administrator.',
+			ru: 'У вас нет доступа к этой команде. Если вы считаете, что это ошибка, обратитесь к администратору бота.',
+		},
 		invalidCaseNumber: {
 			en: 'Invalid case number. Please, check your case number and try again.',
 			ru: 'Неверный номер кейса. Пожалуйста, проверьте номер кейса и попробуйте еще раз.',
@@ -223,6 +227,12 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		en: 'Current cut-off numbers > EU - {EU} | AS - {AS} | AF - {AF} | OC - {OC} | SA - {SA} | NA - {NA}',
 		ru: 'Текущие cut-off номера > EU - {EU} | AS - {AS} | AF - {AF} | OC - {OC} | SA - {SA} | NA - {NA}',
 		uz: 'Joriy cut-off raqamlari > EU - {EU} | AS - {AS} | AF - {AF} | OC - {OC} | SA - {SA} | NA - {NA}',
+	},
+
+	force: {
+		en: 'Force update in progress...',
+		ru: 'Принудительное обновление в процессе...',
+		uz: 'Tugallangan yangilanish bajarilmoqda...',
 	},
 };
 
