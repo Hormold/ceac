@@ -109,6 +109,16 @@ bot.command('status', async ctx => {
 	}));
 });
 
+bot.command('force', async ctx => {
+	const { id } = ctx.from;
+	if (id !== +process.env.ADMIN_ID)
+		return ctx.replyWithHTML(tpl('errors.noAccess', ctx.from.language_code));
+
+	// Reset check time
+	await DB.query('UPDATE application SET last_checked = NULL WHERE notification_tg_id = $1', [id]);
+	ctx.replyWithHTML(tpl('force', ctx.from.language_code));
+});
+
 bot.on('text', async ctx => {
 	const { id } = ctx.from;
 	const { text } = ctx.message;
@@ -129,16 +139,6 @@ bot.on('text', async ctx => {
 		ctx.replyWithHTML(tpl('caseAdded', ctx.from.language_code));
 	else
 		ctx.replyWithHTML(tpl('errors.caseAlreadyAdded', ctx.from.language_code));
-});
-
-bot.command('force', async ctx => {
-	const { id } = ctx.from;
-	if (id !== process.env.ADMIN_ID)
-		return ctx.replyWithHTML(tpl('errors.noAccess', ctx.from.language_code));
-
-	// Reset check time
-	await DB.query('UPDATE application SET last_checked = NULL WHERE notification_tg_id = $1', [id]);
-	ctx.replyWithHTML(tpl('force', ctx.from.language_code));
 });
 
 bot.launch();

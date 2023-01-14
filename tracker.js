@@ -49,8 +49,10 @@ const refresh_once = async () => {
 				await send_notification(status, application);
 				await DB.query('UPDATE application SET last_checked = NOW() WHERE application_id = $1', [application.application_id]);
 				await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2)', [application.application_id, status]);
-			} else
+			} else {
 				console.log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
+				await DB.query('UPDATE application SET last_checked = NOW() WHERE application_id = $1', [application.application_id]);
+			}
 		} catch (e) {
 			console.log(`Application ID: ${application.application_id}, error: ${e.message}`);
 		}
