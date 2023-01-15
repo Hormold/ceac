@@ -5,12 +5,12 @@ import { DB } from './utils/db.js';
 import { getStats } from './utils/stats.js';
 import moment from 'moment';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
+import { refresh_once, visaBulletenTracker } from './tracker.js';
 dotenv.config();
 
-// Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
-const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/;
-
+const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
 bot.start(async ctx => {
 	const stats = await getStats();
 	ctx.replyWithHTML(tpl('start', ctx.from.language_code, stats));
@@ -64,9 +64,7 @@ bot.command('removeSure', async ctx => {
 	if (!status)
 		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 	
-	// Step 1: remove from history
 	await DB.query('DELETE FROM history WHERE application_id = $1', [status.application_id]);
-	// Step 2: remove from application
 	const result = await DB.queryOne('DELETE FROM application WHERE notification_tg_id = $1 RETURNING *', [id]);
 	if (result)
 		ctx.replyWithHTML(tpl('caseRemoved', ctx.from.language_code));
@@ -146,6 +144,8 @@ console.log('Bot started');
 if (process.env.ADMIN_ID)
 	bot.telegram.sendMessage(+process.env.ADMIN_ID, 'Bot started');
 
-// Enable graceful stop
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+// Track (aka cron)
+visaBulletenTracker();
+refresh_once();
+setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
+setInterval(visaBulletenTracker, 1000 * 60 * 60); // 1 hour

@@ -221,6 +221,7 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 	bul_update: {
 		en: '⚠️ Visa bulletin has been updated.\nLink to the bulletin: {url}',
 		ru: '⚠️ Визовый бюллетень был обновлен.\nСсылка на бюллетень: {url}',
+		uz: '⚠️ Viza bulyeteni yangilandi.\nBulyeteni havolasi: {url}',
 	},
 
 	current_cut_off: {

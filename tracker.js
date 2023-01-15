@@ -6,9 +6,11 @@ import axios from 'axios';
 import tough from 'tough-cookie';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
 import { sendMessage } from './utils/tg.js';
-const CURRENT_YEAR = 2023;
+
+const CURRENT_YEAR = 2023; // DV fiscal year
 const ROOT = 'https://ceac.state.gov';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 const send_notification = async (msg, application) => {
 	try {
 		const newStatus = tpl('update', application.lang, {
@@ -23,7 +25,7 @@ const send_notification = async (msg, application) => {
 	}
 };
 
-const refresh_once = async () => {
+export const refresh_once = async () => {
 	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '18 hours'::interval OR last_checked IS NULL");
 	for (const application of applications) {
 		console.log(`Application ID: ${application.application_id}, checking...`);
@@ -102,7 +104,7 @@ const query_status = async application_id => {
 		const req = await instance.get('/ceacstattracker/status.aspx?App=IV');
 		cookieJar.setCookieSync(req.headers['set-cookie'][0], ROOT);
 		const text = req.data;
-		fs.writeFileSync('tmp/IV.html', text);
+		if (process.env.DEBUG) fs.writeFileSync('tmp/IV.html', text);
 		console.log(`[APP ${application_id}] Saved IV.html.`);
 
 		const captchaUrl = ROOT + (text.match(/c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage.*src="(.*?)"/)[1]).replace(/amp;/g, '');
@@ -121,8 +123,7 @@ const query_status = async application_id => {
 		// save updated cookies
 		
 		const img_text = img_resp.data.toString('base64');
-		fs.writeFileSync('tmp/captcha.jpeg', img_resp.data);
-		// console.log(`[APP ${application_id}] Saved captcha.jpeg.`)
+		if (process.env.DEBUG) fs.writeFileSync('tmp/captcha.jpeg', img_resp.data);
 
 		const captcha_num = await resolve_captcha(img_text);
 		console.log(`[APP ${application_id}] Captcha resolved: ${captcha_num}`);
@@ -170,7 +171,7 @@ const query_status = async application_id => {
 
 		const text2 = req2.data;
 
-		fs.writeFileSync('tmp/IV2.html', text2);
+		if (process.env.DEBUG) fs.writeFileSync('tmp/IV2.html', text2);
 		console.log(`[APP ${application_id}] Saved IV2.html.`);
 		// Extract status
 		//  <span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">At NVC</span>
@@ -188,7 +189,7 @@ const query_status = async application_id => {
 	}
 };
 const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-const visaBulletenTracker = async () => {
+export const visaBulletenTracker = async () => {
 	const nextBulletin = new Date();
 	nextBulletin.setMonth(nextBulletin.getMonth() + 1);
 	const url = `https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin/${CURRENT_YEAR}/visa-bulletin-for-${months[nextBulletin.getMonth()]}-${CURRENT_YEAR}.html`;
@@ -244,8 +245,3 @@ const reportNextBulletin = async (month, url) => {
 	await DB.query('INSERT INTO bul_reports (month, year) VALUES ($1, $2)', [month, CURRENT_YEAR]);
 	console.log(`[reportNextBulletin] Reported next bulletin finished: ${month} ${CURRENT_YEAR}`);
 };
-
-visaBulletenTracker();
-refresh_once();
-setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
-setInterval(visaBulletenTracker, 1000 * 60 * 60); // 1 hour
