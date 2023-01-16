@@ -14,11 +14,12 @@ Disclaimer:
 - Telegram bot token (get it from [@BotFather](https://t.me/BotFather))
 - Rucaptcha key (get it from [Rucaptcha](https://rucaptcha.com?from=1626417)), needed to solve the captcha (can topup with debit card, crypto, etc)
 - Telegram ID of admin account (get it from [@RawDataBot](https://t.me/RawDataBot) -> message>from>id)
+- Check actual cut-off numbers for current month (See latest [Visa Bulletin](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-bulletin.html)) and edit in `cut_off_numbers.js`
 
 ## Features
-- Track multiple cases
-- Tracking Visa Bulletin updates
-- Self checking for updates by entering captcha
+- Track one case per user
+- Tracking Visa Bulletin updates (and notify users when updated)
+- Self checking for updates by entering captcha by user
 
 ## SQL Schema
 The SQL schema is located in `sql/schema.sql`
