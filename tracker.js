@@ -40,7 +40,7 @@ const send_notification = async (msg, application) => {
 	}
 };
 
-const remove_application = async application_id => {
+export const remove_application = async application_id => {
 	await DB.query('DELETE FROM history WHERE application_id = $1', [application_id]);
 	return DB.queryOne('DELETE FROM application WHERE application_id = $1 RETURNING *', [application_id]);
 };
