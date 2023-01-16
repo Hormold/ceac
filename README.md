@@ -1,21 +1,24 @@
 # WIP: CEAC Tracking bot
-This bot is used to track the CEAC status of a DV case. It will send a message to a channel when the status changes.
+This bot is used to track the CEAC status of a DV case (Immigrant Visa by Diversity Lottery).
+It will send a message to a private messages when the status changes. 
 
-Disclaimer: I am not responsible for any misuse of this bot. Use it at your own risk. I am not affiliated with the US government. This is a personal project. 
-Work in progress on this project, so expect bugs.
+Disclaimer: 
+> *I am not responsible for any misuse of this bot. Use it at your own risk. I am not affiliated with the US government. This is a personal project.*
+> Work in progress on this project, so expect bugs.
 
 ## Requirements
-- Node.js >= 16
-- PostgreSQL (needed to store the user data)
+- Node.js >= 16 (Uses fetch API)
+- PostgreSQL (needed to store the user data: case id, history, etc)
 
 ## Need to get before run
 - Telegram bot token (get it from [@BotFather](https://t.me/BotFather))
-- Rucaptcha key (get it from [Rucaptcha](https://rucaptcha.com/))
+- Rucaptcha key (get it from [Rucaptcha](https://rucaptcha.com?from=1626417)), needed to solve the captcha (can topup with debit card, crypto, etc)
 - Telegram ID of admin account (get it from [@RawDataBot](https://t.me/RawDataBot) -> message>from>id)
 
 ## Features
 - Track multiple cases
 - Tracking Visa Bulletin updates
+- Self checking for updates by entering captcha
 
 ## SQL Schema
 The SQL schema is located in `sql/schema.sql`
@@ -48,4 +51,4 @@ ADMIN_ID=TG_ADMIN_ID
 
 
 ## Demo
-[@CEACTrackingBot](https://t.me/CEACTrackingBot) - this bot is free to use
+[@CEACTrackingBot](https://t.me/CEACTrackingBot) - this bot is free to use, but I can't guarantee that it will be online 24/7. 
