@@ -5,11 +5,13 @@ import { DB } from './utils/db.js';
 import { getStats } from './utils/stats.js';
 import moment from 'moment';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
-import { refresh_once, visaBulletenTracker } from './tracker.js';
+import { finalizeSelfCheck, initSelfCheck, refresh_once, visaBulletenTracker } from './tracker.js';
 dotenv.config();
 
 const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
+const CAPTCHA_REGEXP = /^[A-Z0-9]{4,6}$/; // Captcha: 4-6 digits, A-Z, 0-9
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const selfCheckMemory = {};
 
 bot.start(async ctx => {
 	const stats = await getStats();
@@ -102,9 +104,39 @@ bot.command('status', async ctx => {
 		statusSince: moment(latestStatus.created_at).locale(ctx.from.language_code).fromNow(),
 		cutOffString,
 
-		checked: new Date(status.last_checked || Date.now()).toLocaleString(ctx.from.language_code),
-		checkedSince: moment(status.last_checked || Date.now()).locale(ctx.from.language_code).fromNow(),
+		checked: status.last_checked ? new Date(status.last_checked).toLocaleString(ctx.from.language_code) : tpl('statuses.inprocess', ctx.from.language_code),
+		checkedSince: status.last_checked ? moment(status.last_checked).locale(ctx.from.language_code).fromNow() : '🔄',
 	}));
+});
+
+bot.command('self', async ctx => {
+	// Trigger self update, and ask user to solve captcha
+	const { id } = ctx.from;
+	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	if (!status)
+		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
+
+	const { application_id } = status;
+	// Minimum recheck time is 10 minutes
+	if (status.last_checked && (Date.now() - status.last_checked) < 10 * 60 * 1000)
+		return ctx.replyWithHTML(tpl('errors.tooFast', ctx.from.language_code));
+	try {
+		const result = await initSelfCheck(application_id);
+		const imgbase = Buffer.from(result.captcha, 'base64');
+		selfCheckMemory[ctx.from.id] = {
+			cached: Date.now(),
+			application_id,
+			...result,
+		};
+		ctx.replyWithPhoto({
+			source: imgbase,
+		}, {
+			caption: tpl('selfCheck', ctx.from.language_code),
+			text: tpl('selfCheck', ctx.from.language_code),
+		});
+	} catch (e) {
+		ctx.replyWithHTML(tpl('errors.captcha', ctx.from.language_code));
+	}
 });
 
 bot.command('force', async ctx => {
@@ -118,8 +150,26 @@ bot.command('force', async ctx => {
 });
 
 bot.on('text', async ctx => {
+	console.log('text', ctx.update);
 	const { id } = ctx.from;
 	const { text } = ctx.message;
+	if (ctx.message.reply_to_message && text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
+		const cache = selfCheckMemory[id];
+		const result = await finalizeSelfCheck(cache.application_id, text, cache);
+		if (result[0]) {
+			const status = result[1];
+			await DB.query('UPDATE application SET last_checked = NOW() WHERE notification_tg_id = $1', [id]);
+			await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2) ON CONFLICT DO NOTHING', [cache.application_id, status]);
+			return ctx.replyWithHTML(tpl('selfCheckSuccess', ctx.from.language_code, {
+				status,
+				num: cache.application_id,
+			}));
+		} else {
+			await DB.query('UPDATE application SET last_checked = NOW(), last_error = $1 WHERE notification_tg_id = $2', [result[1], id]);
+			return ctx.replyWithHTML(tpl('errors.selfCheckFail', ctx.from.language_code));
+		}
+	}
+
 	if (!CASE_REGEXP.test(text))
 		return ctx.replyWithHTML(tpl('errors.invalidCaseNumber', ctx.from.language_code));
 	
@@ -144,8 +194,19 @@ console.log('Bot started');
 if (process.env.ADMIN_ID)
 	bot.telegram.sendMessage(+process.env.ADMIN_ID, 'Bot started');
 
-// Track (aka cron)
-visaBulletenTracker();
-refresh_once();
-setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
-setInterval(visaBulletenTracker, 1000 * 60 * 60); // 1 hour
+if (!process.env.DEBUG) {
+	console.log('Starting tracker');
+	// Track (aka cron)
+	visaBulletenTracker();
+	refresh_once();
+	setInterval(refresh_once, 1000 * 60 * 5); // 30 minutes
+	setInterval(visaBulletenTracker, 1000 * 60 * 60); // 1 hour
+}
+
+// Clean selfCheckMemory every 5 minutes (to prevent memory leak)
+setInterval(() => {
+	const now = Date.now();
+	for (const id in selfCheckMemory)
+		if (now - selfCheckMemory[id].cached > 1000 * 60 * 5)
+			delete selfCheckMemory[id];
+}, 1000 * 60 * 5);

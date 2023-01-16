@@ -58,6 +58,7 @@ Captcha hal qiluvchi joriy balansi: {captchaBalance} RUB`,
 /donate - Пожертвовать на разработку бота
 /remove - Удалить мой кейс из списка отслеживаемых
 /subscribe - Подписаться на рассылку о новых обновлениях визового бюллетеня ({subscribed})
+/self - Ручная проверка статуса кейса через бота с вводом капчи
 
 🤖 Связь с разработчиком: @define
 `,
@@ -71,6 +72,7 @@ I will check for updates about your case once or twice a day.
 /donate - Donate to the bot development
 /remove - Remove my case from tracking list
 /subscribe - Subscribe to mailing list about new visa bulletin updates ({subscribed})
+/self - Manual check of case status through the bot with captcha input
 
 🤖 Contact with developer: @define`,
 		uz: `👋 Ishingiz holatini kuzatishni boshlash uchun menga ish raqamingizni yuboring.
@@ -83,8 +85,9 @@ Men kuniga bir yoki ikki marta ishingizga oid yangilanishlarni tekshiraman.
 /donate - Bot rivojlanishiga xayriya qiling
 /remove - Mening ishimni kuzatuv ro'yxatidan olib tashlang
 /subscribe - Viza byulletenining yangi yangiliklari haqidagi axborot byulleteniga obuna bo'ling ({obuna bo'lgan})
+/self - Bot orqali kaptchani kiriting va ish holatini tekshirish
 
-🤖 Dasturchi bilan bog'lanish: @define`,
+🤖 Dasturchi bilan bog'lanish: @define (Russian/English only)`,
 	},
 
 	statuses: {
@@ -97,6 +100,11 @@ Men kuniga bir yoki ikki marta ishingizga oid yangilanishlarni tekshiraman.
 			ru: '❌ Еще не отслеживается кейс, отправьте мне номер вашего кейса.',
 			en: '❌ Not tracking any cases yet, send me your case number.',
 			uz: '❌ Hali hech qanday ishni kuzatmayman, ish raqamingizni yuboring.',
+		},
+		inprocess: {
+			ru: '🔄 Ваш кейс в процессе обработки, пожалуйста, подождите.',
+			en: '🔄 Your case is in process, please wait.',
+			uz: '🔄 Ishingiz ishlab chiqarilmoqda, iltimos, kutib turing.',
 		},
 	},
 
@@ -123,37 +131,60 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 			en: 'You don\'t have access to this command. If you think this is a mistake, contact the bot administrator.',
 			ru: 'У вас нет доступа к этой команде. Если вы считаете, что это ошибка, обратитесь к администратору бота.',
 		},
+
 		invalidCaseNumber: {
 			en: 'Invalid case number. Please, check your case number and try again.',
 			ru: 'Неверный номер кейса. Пожалуйста, проверьте номер кейса и попробуйте еще раз.',
 			uz: 'Noto\'g\'ri ish raqami. Iltimos, ish raqamingizni tekshiring va qayta urinib ko\'ring.',
 		},
+
 		caseAlreadyTracked: {
 			en: 'This case is already tracked. You can see the status of your case here: /status, if you didn\'t add it - contact the bot administrator.',
 			ru: 'Этот кейс уже отслеживается. Вы можете посмотреть статус вашего кейса здесь: /status, если вы его не добавляли - свяжитесь с администратором бота.',
 			uz: 'Bu ish allaqachon kuzatilmoqda. Siz ish holatini quyidagi joyda ko\'ra olasiz: /status, agar siz uni qo\'shmasangiz - bot administrator bilan bog\'laning.',
 		},
+
 		caseNotTracked: {
 			en: 'This case is not yet tracked. Just wait for updates.',
 			ru: 'Этот кейс еще не отслеживается. Просто ждите обновлений.',
 			uz: 'Bu ish hali kuzatilmaydi. O\'zgartirishlarni kutib turing.',
 		},
+
 		caseStatusesEmpty: {
 			en: 'You don\'t have any cases to track. You can add a case by sending me your case number.',
 			ru: 'У вас нет ни одного кейса для отслеживания. Вы можете добавить кейс, отправив мне номер вашего кейса.',
 			uz: 'Siz kuzatish uchun hech qanday ish yo\'q. Siz ish raqamingizni yuboring',
 		},
+
 		caseLimitPerUser: {
 			en: 'You can\'t add more than one cases per user.',
 			ru: 'К сожалению, вы не можете добавить больше одного кейса на одного пользователя.',
 			uz: 'Uzr so\'raymiz, siz faqat bir foydalanuvchi uchun bir nechta ish qo\'shishingiz mumkin emas.',
 		},
+
 		remove: {
 			en: 'You can\'t remove your case. Please, contact with developer: @define',
 			ru: 'Вы не можете удалить свой кейс. Пожалуйста, свяжитесь с разработчиком: @define',
 			uz: 'Siz o\'zingizni ishni o\'chirib bo\'lmaysiz. Iltimos, dasturchi bilan bog\'laning: @define',
 		},
-		
+
+		tooFast: {
+			ru: 'Нет смысла проверять статус кейса часто. Пожалуйста, подождите немного.',
+			en: 'There is no sense to check the status of the case often. Please, wait a little.',
+			uz: 'Ish holatini tez-tez tekshirishda ma\'no yo\'q. Iltimos, bir oz kutib turing.',
+		},
+
+		captcha: {
+			en: 'Problem with loading captcha. Please, try again later.',
+			ru: 'Проблема с загрузкой капчи. Пожалуйста, попробуйте позже.',
+			uz: 'Kapcha yuklashda muammo. Iltimos, keyinroq qayta urinib ko\'ring.',
+		},
+
+		selfCheckFail: {
+			en: 'Something went wrong. Please, try again later.',
+			ru: 'Что-то пошло не так. Пожалуйста, попробуйте позже.',
+			uz: 'Xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.',
+		},
 	},
 	caseAdded: {
 		en: 'Your case has been added to the tracking list. You can see the status of your case here: /status',
@@ -234,6 +265,18 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		en: 'Force update in progress...',
 		ru: 'Принудительное обновление в процессе...',
 		uz: 'Tugallangan yangilanish bajarilmoqda...',
+	},
+
+	selfCheck: {
+		ru: 'Для проверки статуса вашего кейса, необходимо решить капчу. Пожалуйста, пришлите ответ (Reply) на это сообщение с ответом на капчу.',
+		en: 'To check the status of your case, you need to solve the captcha. Please send the answer (Reply) to this message with the answer to the captcha.',
+		uz: 'Ishingiz holatini tekshirish uchun, siz captcha-ni yechishingiz kerak. Iltimos, captcha-javobini yuboring (Reply) bu xabarga.',
+	},
+
+	selfCheckSuccess: {
+		ru: '✅ Спасибо, ваш кейс ({num}) проверен. Статус: <b>{status}</b>',
+		en: '✅ Thank you, your case ({num}) has been checked. Status: <b>{status}</b>',
+		uz: '✅ Rahmat, sizning ishingiz ({num}) tekshirildi. Holati: <b>{status}</b>',
 	},
 };
 

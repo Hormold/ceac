@@ -10,6 +10,21 @@ import { sendMessage } from './utils/tg.js';
 const CURRENT_YEAR = 2023; // DV fiscal year
 const ROOT = 'https://ceac.state.gov';
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const fields_need_update = [
+	'__VIEWSTATE',
+	'__VIEWSTATEGENERATOR',
+	'LBD_VCID_c_status_ctl00_contentplaceholder1_defaultcaptcha',
+];
+const headers = {
+	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
+	Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+	'Accept-Encoding': 'gzip, deflate, br',
+	'Accept-Language': 'en,ru-RU;q=0.9,zh;q=0.8',
+	'Cache-Control': 'no-cache',
+	Host: 'ceac.state.gov',
+	Referer: 'https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV',
+};
 
 const send_notification = async (msg, application) => {
 	try {
@@ -60,21 +75,93 @@ export const refresh_once = async () => {
 	if (applications.length > 0) console.log(`[${new Date().toISOString()}] Refreshing done, ${applications.length} applications checked.`);
 };
 
-const headers = {
-	'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36',
-	Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-	'Accept-Encoding': 'gzip, deflate, br',
-	'Accept-Language': 'en,ru-RU;q=0.9,zh;q=0.8',
-	'Cache-Control': 'no-cache',
-	Host: 'ceac.state.gov',
-};
-
 const update_from_current_page = (curPage, name) => {
 	const ele = curPage.match(new RegExp(`input.*name="${name}".*value="(.*)"`));
 	if (ele)
 		return ele[1];
     
 	return null;
+};
+
+export const initSelfCheck = async application_id => {
+	const instance = axios.create({
+		withCredentials: true,
+		baseURL: ROOT,
+		headers,
+		// save cookies to whole session (not just one request)
+	});
+	const cookieJar = new tough.CookieJar();
+	const req = await instance.get('/ceacstattracker/status.aspx?App=IV');
+	cookieJar.setCookieSync(req.headers['set-cookie'][0], ROOT);
+	const text = req.data;
+
+	const captchaUrl = ROOT + (text.match(/c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage.*src="(.*?)"/)[1]).replace(/amp;/g, '');
+	const img_resp = await instance.get(captchaUrl, {
+		responseType: 'arraybuffer',
+		headers: {
+			...headers,
+			Referer: 'https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV',
+			Cookie: cookieJar.getCookieStringSync(ROOT),
+		},
+	});
+	for (const key in img_resp.headers['set-cookie'])
+		cookieJar.setCookieSync(img_resp.headers['set-cookie'][key], ROOT);
+	
+	const img_text = img_resp.data.toString('base64');
+
+	return {
+		cookieJar,
+		captcha: img_text,
+		instance,
+		text,
+	};
+};
+
+export const finalizeSelfCheck = async (application_id, captcha, cache) => {
+	try {
+		const data = {
+			ctl00$ToolkitScriptManager1: 'ctl00$ContentPlaceHolder1$UpdatePanel1|ctl00$ContentPlaceHolder1$btnSubmit',
+			__EVENTTARGET: 'ctl00$ContentPlaceHolder1$btnSubmit',
+			__EVENTARGUMENT: '',
+			__LASTFOCUS: '',
+			__VIEWSTATE: '?????',
+			__VIEWSTATEGENERATOR: 'DBF1011F',
+			__VIEWSTATEENCRYPTED: '',
+			ctl00$ContentPlaceHolder1$Visa_Application_Type: 'IV',
+			ctl00$ContentPlaceHolder1$Visa_Case_Number: application_id,
+			ctl00$ContentPlaceHolder1$Captcha: '????',
+			LBD_VCID_c_status_ctl00_contentplaceholder1_defaultcaptcha: '?????',
+			LBD_BackWorkaround_c_status_ctl00_contentplaceholder1_defaultcaptcha: '0',
+			__ASYNCPOST: 'true',
+		};
+
+		data.ctl00$ContentPlaceHolder1$Captcha = captcha.toUpperCase();
+	
+		for (const field of fields_need_update) {
+			const result = update_from_current_page(cache.text, field);
+			if (result)
+				data[field] = result;
+		}
+
+		const form_data = new URLSearchParams();
+		for (const [key, value] of Object.entries(data))
+			form_data.append(key, value);
+
+		const req2 = await cache.instance.post('/ceacstattracker/status.aspx?App=IV', form_data, {
+			headers: {
+				...headers,
+				Cookie: cache.cookieJar.getCookieStringSync(ROOT),
+			},
+		});
+
+		const status = req2.data.match(/<span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">(.*?)<\/span>/)[1];
+		if (!status)
+			return [false, 'Cannot find status'];
+		else
+			return [true, status];
+	} catch (e) {
+		return [false, e.message];
+	}
 };
 
 const query_status = async application_id => {
@@ -144,11 +231,6 @@ const query_status = async application_id => {
 		};
 
 		data.ctl00$ContentPlaceHolder1$Captcha = captcha_num.toUpperCase();
-		const fields_need_update = [
-			'__VIEWSTATE',
-			'__VIEWSTATEGENERATOR',
-			'LBD_VCID_c_status_ctl00_contentplaceholder1_defaultcaptcha',
-		];
 		for (const field of fields_need_update) {
 			const result = update_from_current_page(text, field);
 			if (result)
@@ -188,7 +270,7 @@ const query_status = async application_id => {
 		return [false, e.message];
 	}
 };
-const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
 export const visaBulletenTracker = async () => {
 	const nextBulletin = new Date();
 	nextBulletin.setMonth(nextBulletin.getMonth() + 1);
