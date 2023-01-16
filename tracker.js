@@ -40,6 +40,11 @@ const send_notification = async (msg, application) => {
 	}
 };
 
+const remove_application = async application_id => {
+	await DB.query('DELETE FROM history WHERE application_id = $1', [application_id]);
+	return DB.queryOne('DELETE FROM application WHERE application_id = $1 RETURNING *', [application_id]);
+};
+
 export const refresh_once = async () => {
 	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '18 hours'::interval OR last_checked IS NULL");
 	for (const application of applications) {
@@ -52,8 +57,14 @@ export const refresh_once = async () => {
 			}
 			const [result, status] = await query_status(application.application_id);
 			if (!result) {
-				console.log(`Application ID: ${application.application_id}, problem with query status, check again in 1h`);
-				await DB.query("UPDATE application SET last_checked = NOW() + INTERVAL '1 hours'::interval, last_error = $1 WHERE application_id = $2", [status, application.application_id]);
+				let addedHours = 1;
+				if (application.error_counter > 1) addedHours = application.error_counter * 2;
+				console.log(`Application ID: ${application.application_id}, problem with query status, check again in ${addedHours}h | Error (${application.error_counter}): ${status}`);
+				// Shift last_checked to future (to avoid checking too often)
+				await DB.query("UPDATE application SET last_checked = last_checked + INTERVAL '$3 hours'::interval, last_error = $1, error_counter = error_counter + 1 WHERE application_id = $2", [status, application.application_id, addedHours]);
+				if (application.error_counter > 5)
+					await remove_application(application.application_id);
+				
 				continue;
 			}
 			// Check not have same status in records
@@ -62,11 +73,11 @@ export const refresh_once = async () => {
 			if (!records.length || !hasSameStatus) {
 				console.log('Application ID: ' + application.application_id + ', status: ' + status);
 				await send_notification(status, application);
-				await DB.query('UPDATE application SET last_checked = NOW() WHERE application_id = $1', [application.application_id]);
+				await DB.query('UPDATE application SET last_checked = NOW(), error_counter = 0 WHERE application_id = $1', [application.application_id]);
 				await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2)', [application.application_id, status]);
 			} else {
 				console.log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
-				await DB.query('UPDATE application SET last_checked = NOW() WHERE application_id = $1', [application.application_id]);
+				await DB.query('UPDATE application SET last_checked = NOW(), error_counter = 0 WHERE application_id = $1', [application.application_id]);
 			}
 		} catch (e) {
 			console.log(`Application ID: ${application.application_id}, error: ${e.message}`);
@@ -83,7 +94,7 @@ const update_from_current_page = (curPage, name) => {
 	return null;
 };
 
-export const initSelfCheck = async application_id => {
+export const initSelfCheck = async () => {
 	const instance = axios.create({
 		withCredentials: true,
 		baseURL: ROOT,
@@ -257,13 +268,18 @@ const query_status = async application_id => {
 		console.log(`[APP ${application_id}] Saved IV2.html.`);
 		// Extract status
 		//  <span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">At NVC</span>
-		const status = text2.match(/<span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">(.*?)<\/span>/)[1];
-		if (!status) {
-			console.log(`[APP ${application_id}] Cannot find status in IV2.html.`);
-			return [false, 'Cannot find status in IV2.html.'];
-		} else {
-			console.log(`[APP ${application_id}] Status: ${status}`);
-			return [true, status];
+		try {
+			const status = text2.match(/<span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">(.*?)<\/span>/)[1];
+			if (!status) {
+				console.log(`[APP ${application_id}] Cannot find status in IV2.html.`);
+				return [false, 'Cannot find status in IV2.html.'];
+			} else {
+				console.log(`[APP ${application_id}] Status: ${status}`);
+				return [true, status];
+			}
+		} catch (e) {
+			console.log(`[APP ${application_id}] Error on extracting status.`);
+			return [false, 'Unknown'];
 		}
 	} catch (e) {
 		console.log(`Error on application ${application_id}`, e);

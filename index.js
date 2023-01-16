@@ -5,10 +5,10 @@ import { DB } from './utils/db.js';
 import { getStats } from './utils/stats.js';
 import moment from 'moment';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
-import { finalizeSelfCheck, initSelfCheck, refresh_once, visaBulletenTracker } from './tracker.js';
+import { remove_application, finalizeSelfCheck, initSelfCheck, refresh_once, visaBulletenTracker } from './tracker.js';
 dotenv.config();
 
-const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
+const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/i; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
 const CAPTCHA_REGEXP = /^[A-Z0-9]{4,6}$/; // Captcha: 4-6 digits, A-Z, 0-9
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const selfCheckMemory = {};
@@ -66,10 +66,11 @@ bot.command('removeSure', async ctx => {
 	if (!status)
 		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 	
-	await DB.query('DELETE FROM history WHERE application_id = $1', [status.application_id]);
-	const result = await DB.queryOne('DELETE FROM application WHERE notification_tg_id = $1 RETURNING *', [id]);
+	const result = await remove_application(status.application_id, id);
 	if (result)
 		ctx.replyWithHTML(tpl('caseRemoved', ctx.from.language_code));
+
+	console.log(`[REMOVE] ${ctx.from.username} (${ctx.from.id}) removed case from tracking`);
 });
 
 bot.command('status', async ctx => {
@@ -134,6 +135,7 @@ bot.command('self', async ctx => {
 			caption: tpl('selfCheck', ctx.from.language_code),
 			text: tpl('selfCheck', ctx.from.language_code),
 		});
+		console.log(`[${application_id}] Self check triggered by ${ctx.from.id}`);
 	} catch (e) {
 		ctx.replyWithHTML(tpl('errors.captcha', ctx.from.language_code));
 	}
@@ -150,7 +152,6 @@ bot.command('force', async ctx => {
 });
 
 bot.on('text', async ctx => {
-	console.log('text', ctx.update);
 	const { id } = ctx.from;
 	const { text } = ctx.message;
 	if (ctx.message.reply_to_message && text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
@@ -172,8 +173,11 @@ bot.on('text', async ctx => {
 
 	if (!CASE_REGEXP.test(text))
 		return ctx.replyWithHTML(tpl('errors.invalidCaseNumber', ctx.from.language_code));
+
+	const caseId = text.toUpperCase();
+	console.log(`[INFO] User ${id} added case ${caseId}`);
 	
-	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE application_id = $1', [text]);
+	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE application_id = $1', [caseId]);
 	if (isCaseExists)
 		return ctx.replyWithHTML(tpl('errors.caseAlreadyTracked', ctx.from.language_code));
 
@@ -182,7 +186,7 @@ bot.on('text', async ctx => {
 	if (casesCount.count >= 1)
 		return ctx.replyWithHTML(tpl('errors.caseLimitPerUser', ctx.from.language_code));
 
-	const result = await DB.queryOne('INSERT INTO application (application_id, notification_tg_id, lang) VALUES ($1, $2, $3) RETURNING *', [text, id, ctx.from.language_code]);
+	const result = await DB.queryOne('INSERT INTO application (application_id, notification_tg_id, lang) VALUES ($1, $2, $3) RETURNING *', [caseId, id, ctx.from.language_code]);
 	if (result)
 		ctx.replyWithHTML(tpl('caseAdded', ctx.from.language_code));
 	else
@@ -190,12 +194,12 @@ bot.on('text', async ctx => {
 });
 
 bot.launch();
-console.log('Bot started');
+console.log('[INFO] Bot started');
 if (process.env.ADMIN_ID)
 	bot.telegram.sendMessage(+process.env.ADMIN_ID, 'Bot started');
 
 if (!process.env.DEBUG) {
-	console.log('Starting tracker');
+	console.log('[INFO] Starting tracker');
 	// Track (aka cron)
 	visaBulletenTracker();
 	refresh_once();

@@ -7,7 +7,8 @@ CREATE TABLE application (
     created_at timestamp with time zone DEFAULT now(),
     lang text,
     last_checked timestamp with time zone,
-    last_error text
+    last_error text,
+    error_counter integer DEFAULT 0
 );
 
 CREATE UNIQUE INDEX application_pkey ON application(application_id text_ops);
