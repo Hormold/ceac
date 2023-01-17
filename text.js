@@ -133,9 +133,9 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 		},
 
 		invalidCaseNumber: {
-			en: 'Invalid case number. Please, check your case number and try again.',
-			ru: 'Неверный номер кейса. Пожалуйста, проверьте номер кейса и попробуйте еще раз.',
-			uz: 'Noto\'g\'ri ish raqami. Iltimos, ish raqamingizni tekshiring va qayta urinib ko\'ring.',
+			en: 'Invalid case number. Please, check your case number and try again. If you enter the captcha manually, you should replay to the captcha message.',
+			ru: 'Неверный номер кейса. Пожалуйста, проверьте номер кейса и попробуйте еще раз. Если вы вводите капчу вручную, вы должны ответить на сообщение с капчей.',
+			uz: 'Noto\'g\'ri ish raqami. Iltimos, ish raqamingizni tekshiring va qayta urinib ko\'ring. Agar siz captcha-ni qo\'l bilan kiritsangiz, siz captcha xabarisiga javob bering.',
 		},
 
 		caseAlreadyTracked: {
@@ -268,9 +268,9 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 	},
 
 	selfCheck: {
-		ru: 'Для проверки статуса вашего кейса, необходимо решить капчу. Пожалуйста, пришлите ответ (Reply) на это сообщение с ответом на капчу.',
-		en: 'To check the status of your case, you need to solve the captcha. Please send the answer (Reply) to this message with the answer to the captcha.',
-		uz: 'Ishingiz holatini tekshirish uchun, siz captcha-ni yechishingiz kerak. Iltimos, captcha-javobini yuboring (Reply) bu xabarga.',
+		ru: 'Для проверки статуса вашего кейса ({num}), необходимо решить капчу.\nПожалуйста, пришлите ответ (Reply) на это сообщение с ответом на капчу.',
+		en: 'To check the status of your case ({num}), you need to solve the captcha.\nPlease send the answer (Reply) to this message with the answer to the captcha.',
+		uz: 'Ishingiz holatini tekshirish uchun ({num}), siz captcha-ni yechishingiz kerak.\nIltimos, captcha-javobini yuboring (Reply) bu xabarga.',
 	},
 
 	selfCheckSuccess: {

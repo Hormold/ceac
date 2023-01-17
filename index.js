@@ -132,8 +132,12 @@ bot.command('self', async ctx => {
 		ctx.replyWithPhoto({
 			source: imgbase,
 		}, {
-			caption: tpl('selfCheck', ctx.from.language_code),
-			text: tpl('selfCheck', ctx.from.language_code),
+			caption: tpl('selfCheck', ctx.from.language_code, {
+				num: application_id,
+			}),
+			text: tpl('selfCheck', ctx.from.language_code, {
+				num: application_id,
+			}),
 		});
 		console.log(`[${application_id}] Self check triggered by ${ctx.from.id}`);
 	} catch (e) {
@@ -155,9 +159,10 @@ bot.command('force', async ctx => {
 bot.on('text', async ctx => {
 	const { id } = ctx.from;
 	const { text } = ctx.message;
-	if (ctx.message.reply_to_message && text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
+	if (text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
 		const cache = selfCheckMemory[id];
 		const [isSuccess, status] = await finalizeSelfCheck(cache.application_id, text, cache);
+		delete selfCheckMemory[id];
 		if (isSuccess) {
 			await DB.query('UPDATE application SET last_checked = NOW() WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 			await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2) ON CONFLICT DO NOTHING', [cache.application_id, status]);
