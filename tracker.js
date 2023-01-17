@@ -33,6 +33,8 @@ const send_notification = async (msg, application) => {
 			status: msg,
 		});
 		const data = await sendMessage(application.notification_tg_id, newStatus);
+		if (application.additional_tg_id)
+			await sendMessage(application.additional_tg_id, newStatus);
 		if (!data.ok)
 			throw new Error(data.description);
 	} catch (e) {

@@ -20,7 +20,7 @@ bot.start(async ctx => {
 
 bot.help(async ctx => {
 	const { id } = ctx.from;
-	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	const status = await DB.queryOne('SELECT * FROM application WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 	let currentStatus;
 	let subscribed = false;
 	const sub = await DB.queryOne('SELECT * FROM bul_sub WHERE tg_id = $1', [id]);
@@ -62,7 +62,7 @@ bot.command('stats', async ctx => {
 bot.command('remove', async ctx => ctx.replyWithHTML(tpl('caseRemoveSure', ctx.from.language_code)));
 bot.command('removeSure', async ctx => {
 	const { id } = ctx.from;
-	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	const status = await DB.queryOne('SELECT * FROM application WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 	if (!status)
 		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 	
@@ -75,7 +75,7 @@ bot.command('removeSure', async ctx => {
 
 bot.command('status', async ctx => {
 	const { id } = ctx.from;
-	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	const status = await DB.queryOne('SELECT * FROM application WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 	if (!status)
 		return ctx.reply(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 	
@@ -113,7 +113,7 @@ bot.command('status', async ctx => {
 bot.command('self', async ctx => {
 	// Trigger self update, and ask user to solve captcha
 	const { id } = ctx.from;
-	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	const status = await DB.queryOne('SELECT * FROM application WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 	if (!status)
 		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
 
@@ -142,6 +142,7 @@ bot.command('self', async ctx => {
 });
 
 bot.command('force', async ctx => {
+	// Admin tool to force check
 	const { id } = ctx.from;
 	if (id !== +process.env.ADMIN_ID)
 		return ctx.replyWithHTML(tpl('errors.noAccess', ctx.from.language_code));
@@ -156,17 +157,16 @@ bot.on('text', async ctx => {
 	const { text } = ctx.message;
 	if (ctx.message.reply_to_message && text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
 		const cache = selfCheckMemory[id];
-		const result = await finalizeSelfCheck(cache.application_id, text, cache);
-		if (result[0]) {
-			const status = result[1];
-			await DB.query('UPDATE application SET last_checked = NOW() WHERE notification_tg_id = $1', [id]);
+		const [isSuccess, status] = await finalizeSelfCheck(cache.application_id, text, cache);
+		if (isSuccess) {
+			await DB.query('UPDATE application SET last_checked = NOW() WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
 			await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2) ON CONFLICT DO NOTHING', [cache.application_id, status]);
 			return ctx.replyWithHTML(tpl('selfCheckSuccess', ctx.from.language_code, {
 				status,
 				num: cache.application_id,
 			}));
 		} else {
-			await DB.query('UPDATE application SET last_checked = NOW(), last_error = $1 WHERE notification_tg_id = $2', [result[1], id]);
+			await DB.query('UPDATE application SET last_checked = NOW(), last_error = $1 WHERE notification_tg_id = $2', [status, id]);
 			return ctx.replyWithHTML(tpl('errors.selfCheckFail', ctx.from.language_code));
 		}
 	}
@@ -177,7 +177,7 @@ bot.on('text', async ctx => {
 	const caseId = text.toUpperCase();
 	console.log(`[INFO] User ${id} added case ${caseId}`);
 	
-	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE application_id = $1', [caseId]);
+	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE (application_id = $1 OR additional_tg_id = $1)', [caseId]);
 	if (isCaseExists)
 		return ctx.replyWithHTML(tpl('errors.caseAlreadyTracked', ctx.from.language_code));
 
