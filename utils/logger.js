@@ -12,3 +12,10 @@ export const log = message => {
 	else
 		console.log(`${getTS()} - ${message}`);
 };
+
+export const appLog = (applicationId, message) => {
+	if (ENABLE_COLORS)
+		console.log(`\x1b[32m${getTS()}\x1b[0m - \x1b[36m${applicationId}\x1b[0m - ${message}`);
+	else
+		console.log(`${getTS()} - ${applicationId} - ${message}`);
+};
