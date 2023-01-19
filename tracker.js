@@ -60,10 +60,10 @@ export const refresh_once = async () => {
 			const [result, status] = await query_status(application.application_id);
 			if (!result) {
 				let addedHours = 1;
-				if (application.error_counter > 1) addedHours = application.error_counter * 2;
+				if (application.error_counter > 1) addedHours = Math.floor(application.error_counter * 2);
 				console.log(`Application ID: ${application.application_id}, problem with query status, check again in ${addedHours}h | Error (${application.error_counter}): ${status}`);
 				// Shift last_checked to future (to avoid checking too often)
-				await DB.query("UPDATE application SET last_checked = coalesce(last_checked, now()) + INTERVAL '$3 hours'::interval, last_error = $1, error_counter = error_counter + 1 WHERE application_id = $2", [status, application.application_id, addedHours]);
+				await DB.query(`UPDATE application SET last_checked = coalesce(last_checked, now()) + INTERVAL '${addedHours} hours'::interval, last_error = $1, error_counter = error_counter + 1 WHERE application_id = $2`, [status, application.application_id]);
 				if (application.error_counter > 5)
 					await remove_application(application.application_id);
 				
