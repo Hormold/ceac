@@ -11,7 +11,7 @@ import { log } from './utils/logger.js';
 dotenv.config();
 
 const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/i; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
-const CAPTCHA_REGEXP = /^[A-Z0-9]{4,6}$/; // Captcha: 4-6 digits, A-Z, 0-9
+const CAPTCHA_REGEXP = /^[A-Z0-9]{4,6}$/i; // Captcha: 4-6 digits, A-Z, 0-9
 if (!process.env.BOT_TOKEN || process.env.BOT_TOKEN === '') {
 	console.error('BOT_TOKEN not set in .env file');
 	process.exit(1);
@@ -191,7 +191,7 @@ bot.on('text', async ctx => {
 	const { text } = ctx.message;
 	if (text.length > 3 && text.length <= 6 && selfCheckMemory[id] && CAPTCHA_REGEXP.test(text)) {
 		const cache = selfCheckMemory[id];
-		const [isSuccess, status] = await finalizeSelfCheck(cache.application_id, text, cache);
+		const [isSuccess, status] = await finalizeSelfCheck(cache.application_id, text.toUpperCase(), cache);
 		delete selfCheckMemory[id];
 		if (isSuccess) {
 			await DB.query('UPDATE application SET last_checked = NOW() WHERE (notification_tg_id = $1 OR additional_tg_id = $1)', [id]);
