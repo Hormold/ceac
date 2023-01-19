@@ -1,4 +1,6 @@
-# WIP: CEAC Tracking bot
+> CEAC stands for Consular Electronic Application Center, it is an online platform for U.S. visa applicants to submit their application, pay the application fee, schedule an appointment and track the status of their application. It is used by U.S. Department of State's Bureau of Consular Affairs to manage visa applications.
+
+# CEAC Tracking bot
 This bot is used to track the CEAC status of a DV case (Immigrant Visa by Diversity Lottery).
 It will send a message to a private messages when the status changes. 
 
@@ -55,5 +57,5 @@ ADMIN_ID=TG_ADMIN_ID
 [@CEACTrackingBot](https://t.me/CEACTrackingBot) - this bot is free to use, but I can't guarantee that it will be online 24/7. 
 
 ## Alternative solutions
-Telegram channel with CEAC updates - [@twonlupdate](https://t.me/twonlupdate)
-Telegram bot to check CEAC case - [@checkcasebot](https://t.me/checkcasebot)
+1. Telegram channel with CEAC updates - [@twonlupdate](https://t.me/twonlupdate)
+2. Telegram bot to check CEAC case - [@checkcasebot](https://t.me/checkcasebot)
