@@ -55,5 +55,5 @@ ADMIN_ID=TG_ADMIN_ID
 [@CEACTrackingBot](https://t.me/CEACTrackingBot) - this bot is free to use, but I can't guarantee that it will be online 24/7. 
 
 ## Alternative solutions
-Telegram channel with CEAC updates - [@twonlupdate](https://t.me/twonlupdate)
-Telegram bot to check CEAC case - [@checkcasebot](https://t.me/checkcasebot)
+1. Telegram channel with CEAC updates - [@twonlupdate](https://t.me/twonlupdate)
+2. Telegram bot to check CEAC case - [@checkcasebot](https://t.me/checkcasebot)
