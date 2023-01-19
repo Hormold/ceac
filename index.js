@@ -10,6 +10,10 @@ dotenv.config();
 
 const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/i; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
 const CAPTCHA_REGEXP = /^[A-Z0-9]{4,6}$/; // Captcha: 4-6 digits, A-Z, 0-9
+if (!process.env.BOT_TOKEN || process.env.BOT_TOKEN === '' || !process.env.BOT_TOKEN.match(/^[\d:]+$/)) {
+	console.error('BOT_TOKEN not set in .env file');
+	process.exit(1);
+}
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const selfCheckMemory = {};
 

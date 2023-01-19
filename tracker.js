@@ -48,7 +48,7 @@ export const remove_application = async application_id => {
 };
 
 export const refresh_once = async () => {
-	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '18 hours'::interval OR last_checked IS NULL");
+	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '1 hours'::interval OR last_checked IS NULL");
 	for (const application of applications) {
 		console.log(`Application ID: ${application.application_id}, checking...`);
 		try {
