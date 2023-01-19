@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Telegraf } from 'telegraf';
 import dotenv from 'dotenv';
 import { tpl } from './text.js';
@@ -6,6 +7,7 @@ import { getStats } from './utils/stats.js';
 import moment from 'moment';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
 import { remove_application, finalizeSelfCheck, initSelfCheck, refresh_once, visaBulletenTracker } from './tracker.js';
+import { log } from './utils/logger.js';
 dotenv.config();
 
 const CASE_REGEXP = /^2023(EU|AF|AS|OC|SA|NA)\d{1,7}$/i; // Valid case regexp: 2023 + (EU|AF|AS|OC|SA|NA) + 1...7 digits
@@ -43,6 +45,7 @@ bot.help(async ctx => {
 	ctx.replyWithHTML(tpl('help', ctx.from.language_code, {
 		status: currentStatus + '\n' + current_cut_off,
 		subscribed: tpl(subscribed ? 'bul.status_ok' : 'bul.status_not_ok', ctx.from.language_code),
+		id: ctx.from.id,
 	}));
 });
 
@@ -74,7 +77,7 @@ bot.command('removeSure', async ctx => {
 	if (result)
 		ctx.replyWithHTML(tpl('caseRemoved', ctx.from.language_code));
 
-	console.log(`[REMOVE] ${ctx.from.username} (${ctx.from.id}) removed case from tracking`);
+	log(`[REMOVE] ${ctx.from.username} (${ctx.from.id}) removed case from tracking`);
 });
 
 bot.command('status', async ctx => {
@@ -143,7 +146,7 @@ bot.command('self', async ctx => {
 				num: application_id,
 			}),
 		});
-		console.log(`[${application_id}] Self check triggered by ${ctx.from.id}`);
+		log(`[${application_id}] Self check triggered by ${ctx.from.id}`);
 	} catch (e) {
 		ctx.replyWithHTML(tpl('errors.captcha', ctx.from.language_code));
 	}
@@ -158,6 +161,29 @@ bot.command('force', async ctx => {
 	// Reset check time
 	await DB.query('UPDATE application SET last_checked = NULL WHERE notification_tg_id = $1', [id]);
 	ctx.replyWithHTML(tpl('force', ctx.from.language_code));
+});
+
+bot.command('access', async ctx => {
+	// add access to case (for additional tg id from argument)
+	const { id } = ctx.from;
+	const { text } = ctx.message;
+	if (!text)
+		return ctx.replyWithHTML(tpl('errors.noAccessParam', ctx.from.language_code));
+	
+	const status = await DB.queryOne('SELECT * FROM application WHERE notification_tg_id = $1', [id]);
+	if (!status)
+		return ctx.replyWithHTML(tpl('errors.caseStatusesEmpty', ctx.from.language_code));
+	
+	const { application_id } = status;
+	const [_, additional_tg_id] = text.match(/\/access\s+(\d+)/) || [];
+	if (!additional_tg_id)
+		return ctx.replyWithHTML(tpl('errors.noAccessParam', ctx.from.language_code));
+	
+	await DB.query('UPDATE application SET additional_tg_id = $1 WHERE application_id = $2', [additional_tg_id, application_id]);
+	ctx.replyWithHTML(tpl('access', ctx.from.language_code, {
+		num: application_id,
+		additional_tg_id,
+	}));
 });
 
 bot.on('text', async ctx => {
@@ -184,7 +210,7 @@ bot.on('text', async ctx => {
 		return ctx.replyWithHTML(tpl('errors.invalidCaseNumber', ctx.from.language_code));
 
 	const caseId = text.toUpperCase();
-	console.log(`[INFO] User ${id} added case ${caseId}`);
+	log(`[INFO] User ${id} added case ${caseId}`);
 	
 	const isCaseExists = await DB.queryOne('SELECT * FROM application WHERE (application_id = $1 OR additional_tg_id = $1)', [caseId]);
 	if (isCaseExists)
@@ -203,12 +229,12 @@ bot.on('text', async ctx => {
 });
 
 bot.launch();
-console.log('[INFO] Bot started');
+log('[INFO] Bot started');
 if (process.env.ADMIN_ID)
 	bot.telegram.sendMessage(+process.env.ADMIN_ID, 'Bot started');
 
 if (!process.env.DEBUG) {
-	console.log('[INFO] Starting tracker');
+	log('[INFO] Starting tracker');
 	// Track (aka cron)
 	visaBulletenTracker();
 	refresh_once();

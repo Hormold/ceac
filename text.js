@@ -59,8 +59,9 @@ Captcha hal qiluvchi joriy balansi: {captchaBalance} RUB`,
 /remove - Удалить мой кейс из списка отслеживаемых
 /subscribe - Подписаться на рассылку о новых обновлениях визового бюллетеня ({subscribed})
 /self - Ручная проверка статуса кейса через бота с вводом капчи
+/access ID - Дать доступ к отслеживанию кейса (После команды введите ID пользователя, которому вы хотите дать достуа - он должен взять его в боте через команду /help)
 
-🤖 Связь с разработчиком: @define
+🤖 Связь с разработчиком: @define (Ваш ID: {id})
 `,
 		en: `👋 To start tracking your case status, send me your case number.
 I will check for updates about your case once or twice a day.
@@ -73,8 +74,9 @@ I will check for updates about your case once or twice a day.
 /remove - Remove my case from tracking list
 /subscribe - Subscribe to mailing list about new visa bulletin updates ({subscribed})
 /self - Manual check of case status through the bot with captcha input
+/access ID - Give access to track case (After the command, enter the ID of the user you want to give access to - he must take it in the bot through the /help command)
 
-🤖 Contact with developer: @define`,
+🤖 Contact with developer: @define (Your ID: {id}))`,
 		uz: `👋 Ishingiz holatini kuzatishni boshlash uchun menga ish raqamingizni yuboring.
 Men kuniga bir yoki ikki marta ishingizga oid yangilanishlarni tekshiraman.
 
@@ -86,8 +88,9 @@ Men kuniga bir yoki ikki marta ishingizga oid yangilanishlarni tekshiraman.
 /remove - Mening ishimni kuzatuv ro'yxatidan olib tashlang
 /subscribe - Viza byulletenining yangi yangiliklari haqidagi axborot byulleteniga obuna bo'ling ({obuna bo'lgan})
 /self - Bot orqali kaptchani kiriting va ish holatini tekshirish
+/access ID - Ishni kuzatishga kirish (Komandaning keyingi qismida, kirish huquqini berishni istayotgan foydalanuvchining ID raqamini kiriting - u uni /help buyrug'i orqali botda olishi kerak)
 
-🤖 Dasturchi bilan bog'lanish: @define (Russian/English only)`,
+🤖 Dasturchi bilan bog'lanish: @define (Sizning ID raqamingiz: {id})`,
 	},
 
 	statuses: {
@@ -185,6 +188,12 @@ ERC20: \`\`\`0xE25FE1178B66aAC6E0d33D9a3a6742260b5eBAAd\`\`\`
 			ru: 'Что-то пошло не так. Пожалуйста, попробуйте позже.',
 			uz: 'Xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.',
 		},
+
+		noAccessParam: {
+			ru: 'Вам необходимо указать Telegram ID пользователя, для доступа к отслеживанию вашего кейса. Узнать Telegram ID можно здесь, написав с нужного аккаунта: @userinfobot',
+			en: 'You need to specify the Telegram ID of the user to access the tracking of your case. You can find out the Telegram ID here by writing from the desired account: @userinfobot',
+			uz: 'Siz ishni kuzatish uchun foydalanuvchi Telegram ID raqamini belgilashingiz kerak. Telegram ID raqamini quyidagi botdan olishingiz mumkin: @userinfobot',
+		},
 	},
 	caseAdded: {
 		en: 'Your case has been added to the tracking list. You can see the status of your case here: /status',
@@ -277,6 +286,12 @@ Manual check: https://ceac.state.gov/CEACStatTracker/Status.aspx?App=IV`,
 		ru: '✅ Спасибо, ваш кейс ({num}) проверен. Статус: <b>{status}</b>',
 		en: '✅ Thank you, your case ({num}) has been checked. Status: <b>{status}</b>',
 		uz: '✅ Rahmat, sizning ishingiz ({num}) tekshirildi. Holati: <b>{status}</b>',
+	},
+
+	access: {
+		ru: '✅ Доступ к кейсу {num} разрешен с телеграм аккаунта ID {additional_tg_id}',
+		en: '✅ Access to case {num} is allowed from the telegram account ID {additional_tg_id}',
+		uz: '✅ Ishga {num} raqamli kasega {additional_tg_id} ID raqamli telegram hisobidan kirish ruxsat etildi',
 	},
 };
 

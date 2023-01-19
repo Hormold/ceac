@@ -6,6 +6,7 @@ import axios from 'axios';
 import tough from 'tough-cookie';
 import { CUT_OFF_NUMBERS } from './cut_off_numbers.js';
 import { sendMessage } from './utils/tg.js';
+import { log } from './utils/logger.js';
 
 const CURRENT_YEAR = 2023; // DV fiscal year
 const ROOT = 'https://ceac.state.gov';
@@ -38,7 +39,7 @@ const send_notification = async (msg, application) => {
 		if (!data.ok)
 			throw new Error(data.description);
 	} catch (e) {
-		console.log(`Error sending telegram notification to ${application.notification_tg_id}: ${e.message}`);
+		log(`Error sending telegram notification to ${application.notification_tg_id}: ${e.message}`);
 	}
 };
 
@@ -50,18 +51,18 @@ export const remove_application = async application_id => {
 export const refresh_once = async () => {
 	const applications = await DB.query("SELECT * FROM application WHERE last_checked < NOW() - INTERVAL '1 hours'::interval OR last_checked IS NULL");
 	for (const application of applications) {
-		console.log(`Application ID: ${application.application_id}, checking...`);
+		log(`Application ID: ${application.application_id}, checking...`);
 		try {
 			const records = await DB.query('SELECT * FROM history WHERE application_id = $1 ORDER BY created_at DESC', [application.application_id]);
 			if (records && records.find(r => r.status === 'Issued')) {
-				console.log(`Application ${application.application_id} has already issued, skip.`);
+				log(`Application ${application.application_id} has already issued, skip.`);
 				continue;
 			}
 			const [result, status] = await query_status(application.application_id);
 			if (!result) {
 				let addedHours = 1;
 				if (application.error_counter > 1) addedHours = Math.floor(application.error_counter * 2);
-				console.log(`Application ID: ${application.application_id}, problem with query status, check again in ${addedHours}h | Error (${application.error_counter}): ${status}`);
+				log(`Application ID: ${application.application_id}, problem with query status, check again in ${addedHours}h | Error (${application.error_counter}): ${status}`);
 				// Shift last_checked to future (to avoid checking too often)
 				await DB.query(`UPDATE application SET last_checked = coalesce(last_checked, now()) + INTERVAL '${addedHours} hours'::interval, last_error = $1, error_counter = error_counter + 1 WHERE application_id = $2`, [status, application.application_id]);
 				if (application.error_counter > 5)
@@ -71,21 +72,21 @@ export const refresh_once = async () => {
 			}
 			// Check not have same status in records
 			const hasSameStatus = records.find(r => r.status === status);
-			console.log(`Application ID: ${application.application_id}, previous statuses: ${records.map(r => r.status).join(', ')}, has same status: ${hasSameStatus} | NEW STATUS: "${status}"`);
+			log(`Application ID: ${application.application_id}, previous statuses: ${records.map(r => r.status).join(', ')}, has same status: ${hasSameStatus} | NEW STATUS: "${status}"`);
 			if (!records.length || !hasSameStatus) {
-				console.log('Application ID: ' + application.application_id + ', status: ' + status);
+				log('Application ID: ' + application.application_id + ', status: ' + status);
 				await send_notification(status, application);
 				await DB.query('UPDATE application SET last_checked = NOW(), error_counter = 0 WHERE application_id = $1', [application.application_id]);
 				await DB.query('INSERT INTO history (application_id, status) VALUES ($1, $2)', [application.application_id, status]);
 			} else {
-				console.log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
+				log(`Application ID: ${application.application_id}, status: ${status}, no change.`);
 				await DB.query('UPDATE application SET last_checked = NOW(), error_counter = 0 WHERE application_id = $1', [application.application_id]);
 			}
 		} catch (e) {
-			console.log(`Application ID: ${application.application_id}, error: ${e.message}`);
+			log(`Application ID: ${application.application_id}, error: ${e.message}`);
 		}
 	}
-	if (applications.length > 0) console.log(`[${new Date().toISOString()}] Refreshing done, ${applications.length} applications checked.`);
+	if (applications.length > 0) log(`Refreshing done, ${applications.length} applications checked.`);
 };
 
 const update_from_current_page = (curPage, name) => {
@@ -184,14 +185,14 @@ const query_status = async application_id => {
 	const applicationNumber = +application_id.substring(6);
 	
 	if (CUT_OFF_NUMBERS[applicationRegion] && applicationNumber > CUT_OFF_NUMBERS[applicationRegion]) {
-		console.log(`Application ID: ${application_id}, number is too big, skip. Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`);
+		log(`Application ID: ${application_id}, number is too big, skip. Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`);
 		return [true, 'At NVC'];
 	} else {
-		console.log(`Application ID: ${application_id}, number is ok, continue. number: ${applicationNumber}, region: ${applicationRegion}`);
-		console.log(`Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`, CUT_OFF_NUMBERS);
+		log(`Application ID: ${application_id}, number is ok, continue. number: ${applicationNumber}, region: ${applicationRegion}`);
+		log(`Current max for ${applicationRegion}: ${CUT_OFF_NUMBERS[applicationRegion]}`, CUT_OFF_NUMBERS);
 	}
 
-	console.log(`[APP ${application_id}] Querying status..., region: ${applicationRegion}, number: ${applicationNumber}`);
+	log(`[APP ${application_id}] Querying status..., region: ${applicationRegion}, number: ${applicationNumber}`);
 
 	try {
 		const instance = axios.create({
@@ -205,10 +206,10 @@ const query_status = async application_id => {
 		cookieJar.setCookieSync(req.headers['set-cookie'][0], ROOT);
 		const text = req.data;
 		if (process.env.DEBUG) fs.writeFileSync('tmp/IV.html', text);
-		console.log(`[APP ${application_id}] Saved IV.html.`);
+		log(`[APP ${application_id}] Saved IV.html.`);
 
 		const captchaUrl = ROOT + (text.match(/c_status_ctl00_contentplaceholder1_defaultcaptcha_CaptchaImage.*src="(.*?)"/)[1]).replace(/amp;/g, '');
-		console.log(`[APP ${application_id}] Captcha URL = ${captchaUrl}`);
+		log(`[APP ${application_id}] Captcha URL = ${captchaUrl}`);
 		const img_resp = await instance.get(captchaUrl, {
 			responseType: 'arraybuffer',
 			headers: {
@@ -226,7 +227,7 @@ const query_status = async application_id => {
 		if (process.env.DEBUG) fs.writeFileSync('tmp/captcha.jpeg', img_resp.data);
 
 		const captcha_num = await resolve_captcha(img_text);
-		console.log(`[APP ${application_id}] Captcha resolved: ${captcha_num}`);
+		log(`[APP ${application_id}] Captcha resolved: ${captcha_num}`);
 		const data = {
 			ctl00$ToolkitScriptManager1: 'ctl00$ContentPlaceHolder1$UpdatePanel1|ctl00$ContentPlaceHolder1$btnSubmit',
 			__EVENTTARGET: 'ctl00$ContentPlaceHolder1$btnSubmit',
@@ -249,7 +250,7 @@ const query_status = async application_id => {
 			if (result)
 				data[field] = result;
 			else
-				console.log(`[APP ${application_id}] Cannot update ${field} from current page.`);
+				log(`[APP ${application_id}] Cannot update ${field} from current page.`);
 		}
 
 		const form_data = new URLSearchParams();
@@ -267,24 +268,24 @@ const query_status = async application_id => {
 		const text2 = req2.data;
 
 		if (process.env.DEBUG) fs.writeFileSync('tmp/IV2.html', text2);
-		console.log(`[APP ${application_id}] Saved IV2.html.`);
+		log(`[APP ${application_id}] Saved IV2.html.`);
 		// Extract status
 		//  <span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">At NVC</span>
 		try {
 			const status = text2.match(/<span id="ctl00_ContentPlaceHolder1_ucApplicationStatusView_lblStatus">(.*?)<\/span>/)[1];
 			if (!status) {
-				console.log(`[APP ${application_id}] Cannot find status in IV2.html.`);
+				log(`[APP ${application_id}] Cannot find status in IV2.html.`);
 				return [false, 'Cannot find status in IV2.html.'];
 			} else {
-				console.log(`[APP ${application_id}] Status: ${status}`);
+				log(`[APP ${application_id}] Status: ${status}`);
 				return [true, status];
 			}
 		} catch (e) {
-			console.log(`[APP ${application_id}] Error on extracting status.`);
+			log(`[APP ${application_id}] Error on extracting status.`);
 			return [false, 'Unknown'];
 		}
 	} catch (e) {
-		console.log(`Error on application ${application_id}`, e);
+		log(`Error on application ${application_id}`, e);
 		return [false, e.message];
 	}
 };
@@ -300,15 +301,15 @@ export const visaBulletenTracker = async () => {
 		});
 		const text = content.data;
 		if (text.match(/404 - Page Not Found/i))
-			console.log('[VBT] Cannot find next bulletin.');
+			log('[VBT] Cannot find next bulletin.');
 		else
-			// console.log(`!!!!!!!!!!!!!!!!!!!! [VBT] Next bulletin found: ${url}`);
+			// log(`!!!!!!!!!!!!!!!!!!!! [VBT] Next bulletin found: ${url}`);
 			reportNextBulletin(months[nextBulletin.getMonth()], url);
 	} catch (e) {
 		if (e.message.match(/404/i))
-			console.log('[VBT] Cannot find next bulletin.');
+			log('[VBT] Cannot find next bulletin.');
 		else
-			console.log(`[VBT] Error: ${e.message}`);
+			log(`[VBT] Error: ${e.message}`);
 	}
 };
 
@@ -333,9 +334,9 @@ const reportNextBulletin = async (month, url) => {
 					parse_mode: 'HTML',
 					disable_web_page_preview: true,
 				});
-				console.log(`[reportNextBulletin] Sent to ${user.tg_id} (${user.lang})`);
+				log(`[reportNextBulletin] Sent to ${user.tg_id} (${user.lang})`);
 			} catch (e) {
-				console.log(`[reportNextBulletin] Error: ${e.message}`, e);
+				log(`[reportNextBulletin] Error: ${e.message}`, e);
 			}
 			await sleep(500);
 		}
@@ -343,5 +344,5 @@ const reportNextBulletin = async (month, url) => {
 	}
 
 	await DB.query('INSERT INTO bul_reports (month, year) VALUES ($1, $2)', [month, CURRENT_YEAR]);
-	console.log(`[reportNextBulletin] Reported next bulletin finished: ${month} ${CURRENT_YEAR}`);
+	log(`[reportNextBulletin] Reported next bulletin finished: ${month} ${CURRENT_YEAR}`);
 };
